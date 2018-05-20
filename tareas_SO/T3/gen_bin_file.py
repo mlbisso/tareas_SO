@@ -36,6 +36,20 @@ for i in range(64):
 	entry = struct.pack('@BBBBBBBBBBBBBBBB', a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p)
 	fd_out.write(entry)
 	fd_out.flush()
+
+
+for i in range(65536):
+	if i == 0:
+		byte = 255
+	elif i == 1:
+		byte = 128
+	else:
+		byte = 0
+
+	entry = struct.pack('@B', byte)
+	fd_out.write(entry)
+	fd_out.flush()
+
 fd_out.close()
 
 

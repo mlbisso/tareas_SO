@@ -32,7 +32,7 @@ typedef struct directorio Directorio;
 
 struct directorio
 {
-  uint8_t valido[1 + 1];
+  unsigned char valido[1 + 1];
   char nombre[11 + 1];
   char indice[4 + 1];
   Directorio* next_directorio;
@@ -80,6 +80,7 @@ struct index
   char modificacion[4 + 1];
   BDatos* datos[252];
   BIndirecto* indice;
+  int num_bloque;
 };
 
 typedef struct czFILE {
@@ -124,4 +125,4 @@ void actualizar_indice(BIndice* bindice);
 void actualizar_indirecto(BIndirecto* bindirecto);
 void actualizar_datos(BDatos* bdatos);
 
-void setear_bindice();
+void setear_bindice(int indice);
