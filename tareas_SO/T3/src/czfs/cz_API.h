@@ -32,7 +32,7 @@ typedef struct directorio Directorio;
 
 struct directorio
 {
-  char valido[1 + 1];
+  uint8_t valido[1 + 1];
   char nombre[11 + 1];
   char indice[4 + 1];
   Directorio* next_directorio;
@@ -55,7 +55,7 @@ typedef struct bitmap Bitmap;
 struct bitmap
 {
   // char bits[1024 + 1];
-  uint8_t bits[1024];              //2^10 * 2^13
+  unsigned char bits[1024];              //2^10 * 2^13
   Bitmap* next_bitmap;
   unsigned int num_bloque;
 };
@@ -115,9 +115,13 @@ BIndice* bindice_init();
 BIndirecto* bindirecto_init();
 BDatos* bdatos_init();
 
+czFILE* czfile_init(char* filename);
+
 int buscar_indice();
 void actualizar_directorio(BDirectorio* bdirectorio);
 void actualizar_bitmap(Bitmap* bitmap);
 void actualizar_indice(BIndice* bindice);
 void actualizar_indirecto(BIndirecto* bindirecto);
 void actualizar_datos(BDatos* bdatos);
+
+void setear_bindice();

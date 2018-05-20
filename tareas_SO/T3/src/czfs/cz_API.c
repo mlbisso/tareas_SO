@@ -14,9 +14,8 @@
 
 BDirectorio * bdirectorio;
 Bitmaps * bitmaps;
-czFILE* archivo;
 char* filename_disco;
-BIndice* in_bindice;
+BIndice* bindice;
 
 // Process* process_init(int PID)
 // {
@@ -32,10 +31,18 @@ BIndice* in_bindice;
 
 // extern FILE *fp;
 
+czFILE* czfile_init(char* filename){
+	czFILE* archivo = malloc(sizeof(czFILE));
+	strcpy(archivo -> filename, filename);
+	archivo -> filename[11] = '\0';
+	archivo -> indice = bindice;
+	return archivo;
+}
+
 void cz_mount(char* diskfileName){
 	bdirectorio = bdirectorio_init();
 	bitmaps = bitmaps_init();	
-	in_bindice = bindice_init();
+	bindice = bindice_init();
 	FILE *fp;
 	filename_disco = diskfileName;
    	// char buffer[1024];
@@ -166,42 +173,52 @@ void bitmap_insert(Bitmaps* bitymaps, Bitmap* new){
 
 czFILE* cz_open(char* filename, char mode){
 	// if (strcmp(mode, 'r') == 0){				//si modo es lectura
-	if (mode == 'r'){
+	if (mode == 'r'){					//mode 'r'
 		if (cz_exists(filename) == 0){	//si no existe el nombre
 			return NULL;
 		}
 		else{
-			archivo = malloc(sizeof(czFILE));
+			czFILE* archivo = czfile_init(filename);
 			//TODO cargar archivo desde disco
 			return archivo;
 		}
 	}
-	if (mode == 'w'){				//si modo es escritura
+	if (mode == 'w'){				//modo 'w'
 		if (cz_exists(filename) == 1){	//si ya existe el nombre
 			return NULL;
 		}
 		else{
-			archivo = malloc(sizeof(czFILE));
-			strcpy(archivo -> filename, filename);
-			archivo -> filename[11] = '\0';
 			int indice = buscar_indice();
-
 			if (indice != -1){
-				in_bindice -> tamano = 0x00;
-				char tamano[4 + 1];
-  char creacion[4 + 1];
-  char modificacion[4 + 1];
-  BDatos* datos[252];
-  BIndirecto* indice;
+				setear_bindice();
+				czFILE * archivo = czfile_init(filename);
+				return archivo;
 			}
 			else{
 				return NULL;
 			}
 			//TODO  agregarle a archivo el nombre filename
-			return archivo;
 		}
 	}
 	return NULL;
+}
+
+void setear_bindice(){
+	int i;
+	for (i = 0; i < 4; i ++){
+		bindice -> tamano[i] = 0x00;
+		bindice -> creacion[i] = 0x00;
+		bindice -> modificacion[i] = 0x00;
+	}
+	bindice -> tamano[4] = '\0';
+	bindice -> creacion[4] = '\0';
+	bindice -> modificacion[4] = '\0';
+
+	//TODO revisar
+	for (i = 0; i < 252; i++){
+		bindice -> datos[i] = 0x00;
+	}
+	bindice -> indice = 0x00;
 }
 
 int cz_exists(char* filename){
@@ -256,26 +273,59 @@ int cz_cp(char* orig, char* dest){
 void cz_ls(){
 	Directorio* directorio_actual = bdirectorio -> head;
 	while (directorio_actual != NULL){
-		printf("actual %d\n", *directorio_actual -> valido);
+		// printf("actual %d\n", directorio_actual -> valido[0]);
 		// printf("actual %s\n", directorio_actual -> valido);
-		if (*directorio_actual -> valido == 1){
+		// printf("dir %i\n", *directorio_actual -> valido);
+		unsigned char nulo;
+		nulo = '\x01';
+		if (*directorio_actual -> valido == nulo){
 			printf("%s \n", directorio_actual -> nombre);
 		}
+		// if (directorio_actual -> valido[0] == 70){
+		// 	printf("yeiyei\n");
+		// 	printf("UNREAL %d\n", directorio_actual -> nombre[0]);
+		// 	directorio_actual -> nombre[0] = 0x01;
+		// 	printf("real %d\n", directorio_actual -> nombre[0]);
+		// 	printf("YEYEY\n");
+		// }
 		directorio_actual = directorio_actual -> next_directorio;
 	}
 }
 
+//TODO revisar esta malo
 int buscar_indice(){
 	Bitmap* actual_bitmap = bitmaps -> head;
 	while (actual_bitmap != NULL){
-		for (int i = 0; i < 1024; i++){
+		for (int i = 0; i < 1024; i++){			//recorrer cada byte del bitmap
+			for (int j = 0; j < 8; j ++){
+				if (((actual_bitmap -> bits[0] & ( 1 << j )) >> j) == 1){
+					printf("buena\n");
+				}
+			}
+			// if ((n & ( 1 << k )) >> k){
+			// 	printf("iiiiii\n");
+			// }
+
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0] >> 7));
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0] >> 6));
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0] >> 5));
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0] >> 4));
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0] >> 3));
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0] >> 2));
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0] >> 1));
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0] >> 0));
+			// printf("ANTES: %u\n", (actual_bitmap -> bits[0]));
+			break;
 			if (actual_bitmap -> bits[i] == 0){   //hay espacio aqui, entonces se asigna
-				actual_bitmap -> bits[i] = 1;
+				// printf("ANTES: %d\n", actual_bitmap -> bits[i]);
+				// actual_bitmap -> bits[i] = 1;
+				// printf("DESPUES: %d\n", actual_bitmap -> bits[i]);
 				actualizar_bitmap(actual_bitmap);
 				return ((actual_bitmap -> num_bloque - 1) * 1024 + i);
 			}
 		}
 		actual_bitmap = actual_bitmap -> next_bitmap;
+		break;
 	}
 	return -1;
 }
