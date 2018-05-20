@@ -119,10 +119,12 @@ BDatos* bdatos_init();
 czFILE* czfile_init(char* filename);
 
 int buscar_indice();
-void actualizar_directorio(BDirectorio* bdirectorio);
+void actualizar_directorio(int posicion_directorio, Directorio* directorio);
 void actualizar_bitmap(Bitmap* bitmap);
 void actualizar_indice(BIndice* bindice);
 void actualizar_indirecto(BIndirecto* bindirecto);
 void actualizar_datos(BDatos* bdatos);
 
 void setear_bindice(int indice);
+int directorio_lleno();
+void agregar_direccion(czFILE* archivo);

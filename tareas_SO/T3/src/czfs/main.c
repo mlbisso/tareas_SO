@@ -15,7 +15,9 @@ int main(int argc, char *argv[])
 
 	cz_mount(argv[1]);
 
-	cz_open("hola.txt", 'w');
+	printf("%d\n", cz_exists("aaaaaa.txt"));
+	cz_open("aaaaaa.txt", 'w');
+
 	// int n= cz_exists("polloyarroz");
 	// printf("n: %d", n);
 	// FILE *fp;
@@ -23,7 +25,7 @@ int main(int argc, char *argv[])
 
 	// fp = fopen("simdiskformat.bin", "rb");
 	// cz_ls();
-	// printf("%d\n", cz_exists("nonono.txt"));
+	printf("%d\n", cz_exists("aaaaaa.txt"));
 	// unsigned char buffer[10];
 	// FILE *ptr;
 

@@ -189,9 +189,10 @@ czFILE* cz_open(char* filename, char mode){
 		}
 		else{
 			int indice = buscar_indice();
-			if (indice != -1){				//hay un espacio para guardar el indice de archivo
-				setear_bindice(indice);
+			if (indice != -1 && !directorio_lleno()){				//hay un espacio para guardar el indice de archivo
+				setear_bindice(indice);		//hago que el bloque indice esté vacío
 				czFILE * archivo = czfile_init(filename);
+				agregar_direccion(archivo);
 				return archivo;
 			}
 			else{
@@ -201,6 +202,33 @@ czFILE* cz_open(char* filename, char mode){
 		}
 	}
 	return NULL;
+}
+
+void agregar_direccion(czFILE* archivo){
+	Directorio* directorio_actual = bdirectorio -> head;
+	int posicion_directorio = 0;
+	while(directorio_actual != NULL){
+		if (*directorio_actual -> valido == 0){			//quiere decir que hay espacio
+			*directorio_actual -> valido = 1;
+			strcpy(directorio_actual -> nombre, archivo -> filename);
+			*directorio_actual -> indice = archivo -> indice -> num_bloque;
+			break;
+		}
+		directorio_actual = directorio_actual -> next_directorio;
+		posicion_directorio += 1;
+	}
+	actualizar_directorio(posicion_directorio, directorio_actual);
+}
+
+int directorio_lleno(){
+	Directorio* directorio_actual = bdirectorio -> head;
+	while(directorio_actual != NULL){
+		if (*directorio_actual -> valido == 0){			//quiere decir que hay espacio
+			return 0;									//no está lleno
+		}
+		directorio_actual = directorio_actual -> next_directorio;
+	}
+	return 1;											//está lleno
 }
 
 void setear_bindice(int indice){
@@ -274,26 +302,15 @@ int cz_cp(char* orig, char* dest){
 void cz_ls(){
 	Directorio* directorio_actual = bdirectorio -> head;
 	while (directorio_actual != NULL){
-		// printf("actual %d\n", directorio_actual -> valido[0]);
-		// printf("actual %s\n", directorio_actual -> valido);
-		// printf("dir %i\n", *directorio_actual -> valido);
 		unsigned char nulo;
 		nulo = '\x01';
 		if (*directorio_actual -> valido == nulo){
 			printf("%s \n", directorio_actual -> nombre);
 		}
-		// if (directorio_actual -> valido[0] == 70){
-		// 	printf("yeiyei\n");
-		// 	printf("UNREAL %d\n", directorio_actual -> nombre[0]);
-		// 	directorio_actual -> nombre[0] = 0x01;
-		// 	printf("real %d\n", directorio_actual -> nombre[0]);
-		// 	printf("YEYEY\n");
-		// }
 		directorio_actual = directorio_actual -> next_directorio;
 	}
 }
 
-//TODO revisar esta malo
 int buscar_indice(){
 	Bitmap* actual_bitmap = bitmaps -> head;
 	while (actual_bitmap != NULL){
@@ -303,9 +320,9 @@ int buscar_indice(){
 					int resultado = i * 8 + (7 - j);
 					actual_bitmap -> bits[i] |= 1UL << j;				//cambiar un bit a 1 en actual_bitmap
 					actualizar_bitmap(actual_bitmap);
-					printf("i: %d\n", i);
-					printf("j: %d\n", j);
-					printf("resultado: %d\n", resultado);
+					// printf("i: %d\n", i);
+					// printf("j: %d\n", j);
+					// printf("resultado: %d\n", resultado);
 					return resultado;
 				}
 			}
@@ -315,8 +332,20 @@ int buscar_indice(){
 	return -1;
 }
 
-void actualizar_directorio(BDirectorio* bdirectorio){
+void actualizar_directorio(int posicion_directorio, Directorio* directorio){
+	FILE *fp;
+	fp = fopen(filename_disco, "wb");
 
+	fseek(fp, posicion_directorio * 16, SEEK_SET); 
+	fwrite(directorio -> valido, 1, 1, fp);
+
+	fseek(fp, 1 + posicion_directorio * 16, SEEK_SET);
+	fwrite(directorio -> nombre, 11, 1, fp);
+
+	fseek(fp, 12 + posicion_directorio * 16, SEEK_SET);
+	fwrite(directorio-> indice, 4, 1, fp);
+
+	fclose(fp);
 }
 
 void actualizar_bitmap(Bitmap* bitmap){
