@@ -16,7 +16,8 @@ typedef struct bdatos BDatos;
 
 struct bdatos
 {
-  char datos[1024 + 1];
+  unsigned char datos[1024 + 1];
+  int num_bloque;
 };
 
 struct indirecto;
@@ -25,6 +26,7 @@ typedef struct indirecto BIndirecto;
 struct indirecto
 {
   BDatos* datos[256];
+  int num_bloque;
 };
 
 struct directorio;
@@ -34,7 +36,7 @@ struct directorio
 {
   unsigned char valido[1 + 1];
   char nombre[11 + 1];
-  char indice[4 + 1];
+  unsigned char indice[4 + 1];
   Directorio* next_directorio;
 };
 
@@ -75,11 +77,11 @@ typedef struct index BIndice;
 
 struct index
 {
-  char tamano[4 + 1];
+  unsigned char tamano[4 + 1];
   char creacion[4 + 1];
   char modificacion[4 + 1];
   BDatos* datos[252];
-  BIndirecto* indice;
+  BIndirecto* indirecto;
   int num_bloque;
 };
 
@@ -114,11 +116,11 @@ void bitmap_insert(Bitmaps* bitmaps, Bitmap* new);
 
 BIndice* bindice_init();
 BIndirecto* bindirecto_init();
-BDatos* bdatos_init();
+BDatos* bdatos_init(int num_bloque);
 
 czFILE* czfile_init(char* filename);
 
-int buscar_indice();
+int buscar_espacio_en_bitmap();
 void actualizar_directorio(int posicion_directorio, Directorio* directorio);
 void actualizar_bitmap(Bitmap* bitmap);
 void actualizar_indice(BIndice* bindice);
@@ -126,5 +128,20 @@ void actualizar_indirecto(BIndirecto* bindirecto);
 void actualizar_datos(BDatos* bdatos);
 
 void setear_bindice(int indice);
+void setear_bindirecto(int indice);      
 int directorio_lleno();
 void agregar_direccion(czFILE* archivo);
+int obtener_tamano(unsigned char* tamano);
+int byte_a_decimal(unsigned char* tamano, int nbytes);
+
+int escribir_un_bloque(czFILE* file_desc, void* buffer, int nbytes, int bytes_a_usar_en_bloque_actual, int posicion_bloque);
+void actualizar_tamano(czFILE* file_desc, int j);
+
+void cerrar_bloque_datos(BDatos* datos, FILE *fp);
+void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp);
+
+
+czFILE* setear_estructuras(char * filename);
+
+void liberar_resto();
+

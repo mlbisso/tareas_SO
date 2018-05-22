@@ -15,17 +15,31 @@ int main(int argc, char *argv[])
 
 	cz_mount(argv[1]);
 
-	printf("%d\n", cz_exists("aaaaaa.txt"));
-	cz_open("aaaaaa.txt", 'w');
+	// printf("%d\n", cz_exists("aaaaaa.txt"));
 
-	// int n= cz_exists("polloyarroz");
-	// printf("n: %d", n);
-	// FILE *fp;
- //   	char buffer[256];
+	// printf("%d\n", (int)1025%1024);
 
-	// fp = fopen("simdiskformat.bin", "rb");
-	// cz_ls();
-	printf("%d\n", cz_exists("aaaaaa.txt"));
+		// int tamano = 252 * 1024 +1;
+		// int posicion_bloque_datos = (int)(tamano/1024);  		//donde quiero escribir
+		// int resto = tamano - posicion_bloque_datos * 1024;		
+		// int bytes_a_usar_en_bloque_actual = 1024 - resto;
+
+		// //TODO ver bloque indirecto
+		// printf("posicion_bloque_datos: %d\n", posicion_bloque_datos);		
+		// printf("resto: %d\n", resto);
+		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
+
+	czFILE* file = cz_open("aabaaa.txt", 'w');
+	if (file != NULL){
+		char texto[13] = "lacasadepapel";
+		int total = cz_write(file, texto, 13);
+		printf("total : %d\n", total);
+	}
+	cz_close(file);
+
+	// printf("division %d\n", 7 % 2);
+	// printf("%d\n", cz_exists("aaaaaa.txt"));
+
 	// unsigned char buffer[10];
 	// FILE *ptr;
 
@@ -42,6 +56,6 @@ int main(int argc, char *argv[])
 	// 								   //se lean 20 bytes pow(2,8) veces---->bloques
 	// printf("DIRECCIÓN FÍSICA: %u\n", buffer[0]);
 
-
+	liberar_resto();
 	return 0;
 }

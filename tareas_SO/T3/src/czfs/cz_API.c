@@ -16,6 +16,7 @@ BDirectorio * bdirectorio;
 Bitmaps * bitmaps;
 char* filename_disco;
 BIndice* bindice;
+BIndirecto* bindirecto;
 
 // Process* process_init(int PID)
 // {
@@ -43,6 +44,7 @@ void cz_mount(char* diskfileName){
 	bdirectorio = bdirectorio_init();
 	bitmaps = bitmaps_init();	
 	bindice = bindice_init();
+	bindirecto = bindirecto_init();
 	FILE *fp;
 	filename_disco = diskfileName;
    	// char buffer[1024];
@@ -105,17 +107,28 @@ BDirectorio* bdirectorio_init(){
 }
 
 BIndice* bindice_init(){
-	BIndice* bindice = malloc(sizeof(BIndice));
-	return bindice;
+	BIndice* bindices = calloc(1, sizeof(BIndice));
+	// for (int i = 0; i < 252; i ++){
+	// 	bindices -> datos[i] = NULL;
+	// }
+	return bindices;
 }
 
 BIndirecto* bindirecto_init(){
 	BIndirecto* bindirecto = malloc(sizeof(BIndirecto));
+	// for (int i = 0; i < 256; i ++){
+	// 	  bindirecto -> datos[i] = NULL;
+	// }
 	return bindirecto;
 }
 
-BDatos* bdatos_init(){
+BDatos* bdatos_init(int num_bloque){
 	BDatos* bdatos = malloc(sizeof(BDatos));
+	for (int i = 0; i < 1024; i ++){
+		bdatos -> datos[i] = 0x00;
+	}	
+	bdatos -> datos[1024] = '\0';
+	bdatos -> num_bloque = num_bloque;
 	return bdatos;
 }
 
@@ -178,8 +191,7 @@ czFILE* cz_open(char* filename, char mode){
 			return NULL;
 		}
 		else{
-			czFILE* archivo = czfile_init(filename);
-			//TODO cargar archivo desde disco
+			czFILE* archivo = setear_estructuras(filename);
 			return archivo;
 		}
 	}
@@ -188,7 +200,7 @@ czFILE* cz_open(char* filename, char mode){
 			return NULL;
 		}
 		else{
-			int indice = buscar_indice();
+			int indice = buscar_espacio_en_bitmap();
 			if (indice != -1 && !directorio_lleno()){				//hay un espacio para guardar el indice de archivo
 				setear_bindice(indice);		//hago que el bloque indice esté vacío
 				czFILE * archivo = czfile_init(filename);
@@ -202,6 +214,20 @@ czFILE* cz_open(char* filename, char mode){
 		}
 	}
 	return NULL;
+}
+
+czFILE* setear_estructuras(char * filename){
+	Directorio* directorio_actual = bdirectorio -> head;
+	// unsigned char indice[4 + 1];
+	while (directorio_actual != NULL){
+		if (*directorio_actual -> valido == 1 && strcmp(directorio_actual->nombre, filename) == 0){
+			break;
+		}
+		directorio_actual = directorio_actual -> next_directorio;
+	}	
+	//TODO usar directorio_actual -> indice
+	czFILE* archivo = czfile_init(filename);
+	return archivo;
 }
 
 void agregar_direccion(czFILE* archivo){
@@ -231,22 +257,33 @@ int directorio_lleno(){
 	return 1;											//está lleno
 }
 
+void setear_bindirecto(int indice){
+	bindirecto -> num_bloque = indice;
+	for (int i = 0; i < 256; i++){
+		bindirecto -> datos[i] = NULL;
+	}
+}
+
 void setear_bindice(int indice){
 	int i;
+	// unsigned char* byte_1[4] = {0x00, 0x00, 0x00, 0x00};
+	// strcpy(bindice -> tamano, byte_1);
 	for (i = 0; i < 4; i ++){
-		bindice -> tamano[i] = 0x00;
-		bindice -> creacion[i] = 0x00;
-		bindice -> modificacion[i] = 0x00;
+		// bindice -> tamano[i] = 0x00;
+		bindice -> tamano[i] = 0x00;  				//TODO cambiar a 0x00
+		bindice -> creacion[i] = 0x00;             //TODO cambiar a fecha actual
+		bindice -> modificacion[i] = 0x00;			//TODO cambiar a fecha actual
 	}
+	// bindice -> tamano[3] = 0x01;
 	bindice -> tamano[4] = '\0';
 	bindice -> creacion[4] = '\0';
 	bindice -> modificacion[4] = '\0';
 
 	//TODO revisar
 	for (i = 0; i < 252; i++){
-		bindice -> datos[i] = 0x00;
+		bindice -> datos[i] = NULL;
 	}
-	bindice -> indice = 0x00;
+	bindice -> indirecto = NULL;
 	bindice -> num_bloque = indice;
 }
 
@@ -265,14 +302,263 @@ int cz_exists(char* filename){
 
 // }
 
-// int cz_write(czFILE* file_desc, void* buffer, int nbytes){
+int cz_write(czFILE* file_desc, void* buffer, int nbytes){
+	//TODO cambiar timestamps
+	int bytes_escritos = 0;
+	int tamano = obtener_tamano(file_desc -> indice -> tamano);
+	while (nbytes != 0 || tamano == 520192){					// 508 * 1024
+		tamano = obtener_tamano(file_desc -> indice -> tamano);
+		int posicion_bloque_datos = (int)(tamano/1024);  		//donde quiero escribir
+		int resto = tamano - posicion_bloque_datos * 1024;		
+		int bytes_a_usar_en_bloque_actual = 1024 - resto;
+		// int t = 252 * 1024;
+		// printf("posicion_bloque_datos: %d\n", (int)(t/1024));		
+		// printf("resto: %d\n", t - posicion_bloque_datos * 1024);
+		// printf("posicion_bloque_datos: %d\n", (int)(tamano/1024));
 
-// }
+		//Obtener int de byte
+		// int Int = file_desc -> indice -> tamano[0] | ( (int)file_desc -> indice -> tamano[1] << 8 ) | ( (int)file_desc -> indice -> tamano[2] << 16 ) | ( (int)file_desc -> indice -> tamano[3] << 24 );
+		// printf("INT %d \n", Int);
+		if (posicion_bloque_datos >= 252){			//hay que ir a bloque indirecto
+			if (file_desc -> indice -> indirecto == NULL){  //hay que asignarle un indice indir
+				int indice = buscar_espacio_en_bitmap();	//hay que buscar espacio para indir
+				if (indice != -1){				//hay un espacio para guardar el indice de archivo
+					setear_bindirecto(indice);			
+				}
+				file_desc -> indice -> indirecto = bindirecto;
+			}
+			if (file_desc -> indice -> indirecto -> datos[252 - posicion_bloque_datos] == NULL){
+				int num_bloque = buscar_espacio_en_bitmap();
+				if (num_bloque != -1){			//si hay espacio para un bloque
+					BDatos* bloque_datos = bdatos_init(num_bloque);
+					file_desc -> indice -> datos[252 - posicion_bloque_datos] = bloque_datos;
+				}	
+				else{
+					return -1;
+				}					
+			}
+		}
 
-// int cz_close(czFILE* file_desc){
+		if (file_desc -> indice -> datos[posicion_bloque_datos] == NULL){	//hay que crear un bloque de datos
+			int num_bloque = buscar_espacio_en_bitmap();
+			if (num_bloque != -1){			//si hay espacio para un bloque
+				BDatos* bloque_datos = bdatos_init(num_bloque);
+				file_desc -> indice -> datos[posicion_bloque_datos] = bloque_datos;
+			}	
+			else{
+				return -1;
+			}	
+		}
+		unsigned char *ptr = buffer;
+		BDatos* bdatos;
+		if (posicion_bloque_datos < 252){
+			bdatos = file_desc -> indice -> datos[posicion_bloque_datos];
+		}
+		else{
+			bdatos = file_desc -> indice -> indirecto -> datos[252 - posicion_bloque_datos];
+		}
+		int bytes_a_escribir;
+		if (nbytes <= bytes_a_usar_en_bloque_actual){
+			bytes_a_escribir = nbytes;
+		}
+		else{
+			bytes_a_escribir = bytes_a_usar_en_bloque_actual;
+		}
+		int j = 0;
+		for (int i = 1024 - bytes_a_usar_en_bloque_actual; i < 1024 - bytes_a_usar_en_bloque_actual + bytes_a_escribir; i++){
+			bdatos -> datos[i] = ptr[j];
+			j += 1;
+		}
+		actualizar_tamano(file_desc, j);
+		nbytes -= j;
+		bytes_escritos += j;
+		tamano = obtener_tamano(file_desc -> indice -> tamano);
+	}
+	// for (int i = 0; i < 252; i ++){
+	// 	if (file_desc -> indice -> datos[i] == NULL){
 
-// }
+	// 	}
+	// }
+	return bytes_escritos;
+}
 
+void actualizar_tamano(czFILE* file_desc, int j){
+	// unsigned char bytes[4];
+
+	int tamano = obtener_tamano(file_desc -> indice -> tamano);
+	tamano += j;
+	file_desc -> indice -> tamano[0] = (tamano >> 24) & 0xFF;
+	file_desc -> indice -> tamano[1] = (tamano >> 16) & 0xFF;
+	file_desc -> indice -> tamano[2] = (tamano >> 8) & 0xFF;
+	file_desc -> indice -> tamano[3] = tamano & 0xFF;
+	// int* intArray = malloc(sizeof(int[4]));
+
+	// for (int i=0; i<4; i++){
+	//    intArray[i] = file_desc -> indice -> tamano[i];
+	// }
+	// printf("tamano %d\n", *intArray);
+}
+
+int escribir_un_bloque(czFILE* file_desc, void* buffer, int nbytes, int bytes_a_usar_en_bloque_actual, int posicion_bloque){
+	unsigned char *ptr = buffer;
+	BDatos* bdatos = file_desc -> indice -> datos[posicion_bloque];
+	int bytes_a_escribir;
+	if (nbytes <= bytes_a_usar_en_bloque_actual){
+		bytes_a_escribir = nbytes;
+	}
+	else{
+		bytes_a_escribir = bytes_a_usar_en_bloque_actual;
+	}
+	int j = 0;
+	for (int i = 1024 - bytes_a_usar_en_bloque_actual; i < 1024 - bytes_a_usar_en_bloque_actual + bytes_a_escribir; i++){
+		bdatos -> datos[i] = ptr[j];
+		j += 1;
+	}
+	return nbytes - j; 				//cuantos bytes quedan por escribir
+}
+
+int obtener_tamano(unsigned char* tamano){
+	int tamano_real_bytes = byte_a_decimal(tamano, 4);
+	return tamano_real_bytes;
+}
+
+int byte_a_decimal(unsigned char* tamano, int nbytes){
+	unsigned char *ptr = tamano;
+	unsigned char bits[nbytes * 8 + 1];
+	int numero;
+	int posicion_actual = nbytes * 8 - 1;
+	int asignaciones = 0;
+	for (int i = nbytes - 1; i >= 0; i--){
+		numero = ptr[i];
+		while (numero != 0){
+			if (numero % 2 == 0){    //es par
+				bits[posicion_actual] = '0';
+			}
+			if (numero % 2 == 1){
+				bits[posicion_actual] = '1';
+			}
+			asignaciones += 1;
+			numero = (int)(numero / 2);
+			posicion_actual -= 1;
+		}
+		while (asignaciones != 8){
+			bits[posicion_actual] = '0';
+			posicion_actual -= 1;
+			asignaciones += 1;
+		}
+		asignaciones = 0;
+	}
+	bits[nbytes * 8] = '\0';
+	int resultado = 0;
+	for (int i = 0; i < 32; i++){
+		if (bits[i] == 48){   //es cero
+			if (resultado == 0){
+				continue;
+			}
+			resultado = resultado * 2;
+		}
+		if (bits[i] == 49){    // es uno
+			if (resultado == 0){
+				resultado = 1;
+				continue;
+			}
+			resultado = resultado * 2 + 1;
+		}
+	}
+	return resultado;
+}
+
+int cz_close(czFILE* file_desc){
+	if (cz_exists(file_desc -> filename) == 0){			//el archivo no existe en el sistema
+		return 1;
+	}
+	unsigned char sin_bloque[4];
+	for (int i = 0; i < 4; i++){
+		sin_bloque[i] = 0x00;
+	}
+	FILE *fp;
+	fp = fopen(filename_disco, "wb");
+
+	int num_bloque = file_desc -> indice -> num_bloque;
+	fseek(fp, num_bloque * 1024, SEEK_SET); 
+	fwrite(file_desc -> indice -> tamano, 4, 1, fp);
+
+	fseek(fp, num_bloque * 1024 + 4, SEEK_SET);
+	fwrite(file_desc -> indice -> creacion, 11, 1, fp);
+
+	fseek(fp, num_bloque * 1024 + 8, SEEK_SET);
+	fwrite(file_desc -> indice -> modificacion, 4, 1, fp);
+
+	for (int i = 0; i < 252; i ++){
+		fseek(fp, num_bloque * 1024 + 12 + 4 * i, SEEK_SET);
+		if (file_desc -> indice -> datos[i] == NULL){
+			fwrite(sin_bloque, 4, 1, fp);
+		}
+		else{
+			unsigned char input[4];
+			int num = file_desc -> indice -> datos[i] -> num_bloque;
+			input[0] = (num >> 24) & 0xFF;
+			input[1] = (num >> 16) & 0xFF;
+			input[2] = (num >> 8) & 0xFF;
+			input[3] = num & 0xFF;
+			fwrite(input, 4, 1, fp);
+			cerrar_bloque_datos(file_desc -> indice -> datos[i], fp);
+		}
+	}
+	fseek(fp, num_bloque * 1024 + 12 + 4 * 252, SEEK_SET);
+	if (file_desc -> indice -> indirecto == NULL){
+		fwrite(sin_bloque, 4, 1, fp);
+	}
+	else{
+		unsigned char input[4];
+		int num = file_desc -> indice -> indirecto -> num_bloque;
+		input[0] = (num >> 24) & 0xFF;
+		input[1] = (num >> 16) & 0xFF;
+		input[2] = (num >> 8) & 0xFF;
+		input[3] = num & 0xFF;
+		fwrite(input, 4, 1, fp);
+		cerrar_bloque_indirecto(file_desc -> indice -> indirecto, fp);
+	}
+
+	fclose(fp);
+	//TODO actualizar el coso
+	// file_desc -> indice
+	free(file_desc -> indice);
+	free(file_desc);
+	return 0;
+}
+
+void cerrar_bloque_datos(BDatos* datos, FILE* fp){
+	int num_bloque = datos->num_bloque;
+	fseek(fp, num_bloque * 1024, SEEK_SET); 
+	fwrite(datos -> datos, 1024, 1, fp);
+	free(datos);
+}
+
+void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp){
+	int num_bloque = indirecto->num_bloque;
+	unsigned char sin_bloque[4];
+	for (int i = 0; i < 4; i++){
+		sin_bloque[i] = 0x00;
+	}
+	for (int i = 0; i < 256; i ++){
+		fseek(fp, num_bloque * 1024 + 4 * i, SEEK_SET);
+		if (indirecto -> datos[i] == NULL){
+			fwrite(sin_bloque, 4, 1, fp);
+		}
+		else{
+			unsigned char input[4];
+			int num = indirecto -> datos[i] -> num_bloque;
+			input[0] = (num >> 24) & 0xFF;
+			input[1] = (num >> 16) & 0xFF;
+			input[2] = (num >> 8) & 0xFF;
+			input[3] = num & 0xFF;
+			fwrite(input, 4, 1, fp);
+			cerrar_bloque_datos(indirecto -> datos[i], fp);
+		}	
+	}
+	free(indirecto);
+}
 // int cz_mv(char* orig, char *dest){
 
 // }
@@ -311,7 +597,7 @@ void cz_ls(){
 	}
 }
 
-int buscar_indice(){
+int buscar_espacio_en_bitmap(){
 	Bitmap* actual_bitmap = bitmaps -> head;
 	while (actual_bitmap != NULL){
 		for (int i = 0; i < 1024; i++){			//recorrer cada byte del bitmap
@@ -354,6 +640,26 @@ void actualizar_bitmap(Bitmap* bitmap){
 	fseek(fp, bitmap -> num_bloque * 1024, SEEK_SET); 
 	fwrite(bitmap -> bits, 1024, 1, fp);
 	fclose(fp);
+}
+
+void liberar_resto(){
+	Bitmap* actual_bitmap = bitmaps -> head;
+	while (actual_bitmap != NULL){
+		Bitmap* bitmap_a_borrar = actual_bitmap;
+		actual_bitmap = actual_bitmap -> next_bitmap;
+		free(bitmap_a_borrar);
+	}
+	free(bitmaps);
+
+	Directorio* directorio_actual = bdirectorio -> head;
+	while (directorio_actual != NULL){
+		Directorio* directorio_a_borrar = directorio_actual;
+		directorio_actual = directorio_actual -> next_directorio;
+		free(directorio_a_borrar);
+	}
+	free(bdirectorio);	
+	// free(bindice);						//TODO revisar
+	free(bindirecto);
 }
 
 void actualizar_indice(BIndice* bindice){
