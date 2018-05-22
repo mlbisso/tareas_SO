@@ -108,9 +108,9 @@ BDirectorio* bdirectorio_init(){
 
 BIndice* bindice_init(){
 	BIndice* bindices = calloc(1, sizeof(BIndice));
-	// for (int i = 0; i < 252; i ++){
-	// 	bindices -> datos[i] = NULL;
-	// }
+	//for (int i = 0; i < 252; i ++){
+	//	bindices -> datos[i] = NULL;
+	//}
 	return bindices;
 }
 
@@ -605,9 +605,38 @@ int cz_cp(char* orig, char* dest){
 	return 0; 						//no hubo errores
 }
 
-// int cz_rm(char* filename){
-
-// }
+int cz_rm(char* filename){ //Falta revisar bindice, bindirecto y bdatos usados y modificar bitmaps
+	if (cz_exists(filename) == 1){
+		printf("Se hacen cambios\n");
+		Directorio* directorio_actual = bdirectorio -> head;
+		int posicion_directorio = 0;
+		printf("LS ANTES:\n");
+		cz_ls();
+		while (directorio_actual != NULL){
+			unsigned char no_nulo;
+			no_nulo = '\x01';
+			if (*directorio_actual -> valido == no_nulo){
+				if (strcmp(directorio_actual -> nombre, filename) == 0){
+					printf("FILENAME encontrado en bloque directorio \nCambiando su validez a 0\n");
+					*directorio_actual -> valido = 0;
+					printf("validez cambiada a 0\n");
+					printf("Revisando su indice: %s \n", directorio_actual -> indice);
+					//actualizar_directorio(posicion_directorio, directorio_actual);
+					printf("LS DESPUES:\n");
+					cz_ls();
+					return 0;
+				}
+			}
+			directorio_actual = directorio_actual -> next_directorio;
+			posicion_directorio += 1;
+		}
+	}
+	else{
+		printf("No se hacen cambios \n");
+		return 0;
+	}
+	
+}
 
 	// if (bdirectorio -> head != NULL){
 	// 	printf("no es null\n");

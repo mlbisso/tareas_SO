@@ -35,9 +35,8 @@ int main(int argc, char *argv[])
 		int total = cz_write(file, texto, 13);
 		printf("total : %d\n", total);
 	}
-	char orig[11 + 1] = "camelo.txt";
-	char dest[11 + 1] = "newcam.txt";
-	cz_mv(orig, dest);	
+	char filename[11 + 1] = "sisisi.txt";
+	cz_rm(filename);	
 	cz_close(file);
 
 	// printf("division %d\n", 7 % 2);
