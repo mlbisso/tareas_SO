@@ -559,9 +559,37 @@ void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp){
 	}
 	free(indirecto);
 }
-// int cz_mv(char* orig, char *dest){
-
-// }
+int cz_mv(char* orig, char *dest){
+	if (strcmp(orig, dest) == 0){   //los nombres son iguales 
+		return 1;
+	}
+	if (cz_exists(dest) == 1){		//si dest ya existe
+		return 1;
+	}
+	if (cz_exists(orig) == 1){
+		Directorio* directorio_actual = bdirectorio -> head;
+		//printf("LS ANTES:\n");
+		//cz_ls();
+		//printf("REVISANDO NOMBRES DE BLOQUES DIRECTORIO\n");
+		while (directorio_actual != NULL){
+			unsigned char no_nulo;
+			no_nulo = '\x01';
+			if (*directorio_actual -> valido == no_nulo){
+				if (strcmp(directorio_actual -> nombre, orig) == 0){
+					//printf("Nombre origen : %s encontrado en bloque directorio! \n", orig);
+					strcpy(directorio_actual -> nombre, dest);
+					//printf("LS DESPUES:\n");
+					//cz_ls();
+					return 0;
+				}
+			}
+			directorio_actual = directorio_actual -> next_directorio;
+		}
+	}
+	else {
+		return 1;
+	}
+}
 
 int cz_cp(char* orig, char* dest){
 	if (strcmp(orig, dest) == 0){   //los nombres son iguales 

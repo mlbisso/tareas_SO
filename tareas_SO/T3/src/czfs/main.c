@@ -30,11 +30,14 @@ int main(int argc, char *argv[])
 		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
 
 	czFILE* file = cz_open("aabaaa.txt", 'w');
-	if (file != NULL){
+	if (file != NULL){	
 		char texto[13] = "lacasadepapel";
 		int total = cz_write(file, texto, 13);
 		printf("total : %d\n", total);
 	}
+	char orig[11 + 1] = "camelo.txt";
+	char dest[11 + 1] = "newcam.txt";
+	cz_mv(orig, dest);	
 	cz_close(file);
 
 	// printf("division %d\n", 7 % 2);
