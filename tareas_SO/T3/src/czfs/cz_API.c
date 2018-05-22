@@ -568,6 +568,7 @@ int cz_mv(char* orig, char *dest){
 	}
 	if (cz_exists(orig) == 1){
 		Directorio* directorio_actual = bdirectorio -> head;
+		int posicion_directorio = 0;
 		//printf("LS ANTES:\n");
 		//cz_ls();
 		//printf("REVISANDO NOMBRES DE BLOQUES DIRECTORIO\n");
@@ -580,10 +581,12 @@ int cz_mv(char* orig, char *dest){
 					strcpy(directorio_actual -> nombre, dest);
 					//printf("LS DESPUES:\n");
 					//cz_ls();
+					actualizar_directorio(posicion_directorio, directorio_actual);
 					return 0;
 				}
 			}
 			directorio_actual = directorio_actual -> next_directorio;
+			posicion_directorio += 1;
 		}
 	}
 	else {
