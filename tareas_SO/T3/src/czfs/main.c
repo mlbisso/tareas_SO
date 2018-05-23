@@ -28,14 +28,17 @@ int main(int argc, char *argv[])
 		// printf("posicion_bloque_datos: %d\n", posicion_bloque_datos);		
 		// printf("resto: %d\n", resto);
 		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
-	cz_ls();
-	printf("existe: %d\n", cz_exists("texto.txs"));
-	char or[11 + 1] = "came.txt";
+	// cz_ls();
+	// printf("existe: %d\n", cz_exists("texto.txs"));
+	char or[11 + 1] = "camellp.txt";
 	char dest[11 + 1] = "newcam2.txt";
 	czFILE* file = cz_open(or, 'w');
 	cz_close(file);
-	cz_mv(or, dest);
-	cz_rm(dest);
+	// cz_mv(or, dest);
+					imprimir_bitmaps2();
+	cz_rm(or);
+					imprimir_bitmaps2();
+
 	// czFILE* file = cz_open("aabaaa.txt", 'w');
 	// if (file != NULL){
 	// 	char texto[13] = "lacasadepapel";

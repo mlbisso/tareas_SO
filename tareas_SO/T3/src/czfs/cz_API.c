@@ -222,6 +222,8 @@ czFILE* cz_open(char* filename, char mode){
 czFILE* setear_estructuras(char * filename, int mode){
 	Directorio* directorio_actual = bdirectorio -> head;
 	// unsigned char indice[4 + 1];
+		printf("0\n");
+
 	while (directorio_actual != NULL){
 		if (*directorio_actual -> valido == 1 && strcmp(directorio_actual->nombre, filename) == 0){
 			break;
@@ -230,6 +232,7 @@ czFILE* setear_estructuras(char * filename, int mode){
 	}	
 
 	//Seteo indice
+	printf("1\n");
 	int indice = byte_a_decimal(directorio_actual -> indice, 4);
 	setear_bindice(indice);
 	FILE *fp;
@@ -246,6 +249,8 @@ czFILE* setear_estructuras(char * filename, int mode){
 	fseek(fp, indice * 1024 + 8, SEEK_SET); 	
 	fread(bindice -> modificacion, 4, 1, fp);
 	bindice -> modificacion[4] = '\0';
+
+	printf("2\n");
 
 
 	for (int i = 0; i < 252; i ++){
@@ -264,6 +269,8 @@ czFILE* setear_estructuras(char * filename, int mode){
 		}
 	}
 
+	printf("3\n");
+
 	fseek(fp, indice * 1024 + 12 + 4 * 252, SEEK_SET);
 	unsigned char buffer[4 + 1];
 	fread(buffer, 4, 1, fp);
@@ -278,7 +285,11 @@ czFILE* setear_estructuras(char * filename, int mode){
 	leer_bindirecto(bindirecto, fp);
 	bindice -> indirecto = bindirecto;	
 	fclose(fp);
+		printf("4\n");
+
 	czFILE* archivo = czfile_init(filename, mode);
+		printf("5\n");
+
 	return archivo;
 }
 
@@ -698,7 +709,7 @@ void imprimir_bitmaps(int numero_bitmap){
 	while (actual_bitmap != NULL){
 		for (int i = 0; i < 1024; i++){			//recorrer cada byte del bitmap
 			for (int j = 7; j >= 0; j --){
-				int resultado = i * 8 + j;
+				int resultado = i * 8 + (7 - j);
 				if (resultado == numero_bitmap){
 					if (!((actual_bitmap -> bits[i] & ( 1 << j )) >> j)){ 
 						printf("0");
@@ -720,7 +731,7 @@ void imprimir_bitmaps2(){
 	while (actual_bitmap != NULL){
 		for (int i = 0; i < 1024; i++){			//recorrer cada byte del bitmap
 			for (int j = 7; j >= 0; j --){
-				int resultado = i * 8 + j;
+				int resultado = i * 8 + (7 - j);
 				if (!((actual_bitmap -> bits[i] & ( 1 << j )) >> j)){ 
 					printf("0");
 				}
@@ -730,6 +741,7 @@ void imprimir_bitmaps2(){
 			}
 		}
 		actual_bitmap = actual_bitmap -> next_bitmap;
+		break;
 	}
 	printf("\n");
 }
@@ -739,7 +751,7 @@ void vaciar_bitmap(int bloque){
 	while (actual_bitmap != NULL){
 		for (int i = 0; i < 1024; i++){			//recorrer cada byte del bitmap
 			for (int j = 7; j >= 0; j--){
-				int resultado = i * 8 + j;
+				int resultado = i * 8 + (7 - j);
 				if (resultado == bloque){
 					actual_bitmap -> bits[i] |= 0UL << j;
 					actualizar_bitmap(actual_bitmap);
@@ -752,61 +764,62 @@ void vaciar_bitmap(int bloque){
 
 int cz_rm(char* filename){
 	if (cz_exists(filename) == 1){
-		printf("Se hacen cambios\n");
+		// printf("Se hacen cambios\n");
 		Directorio* directorio_actual = bdirectorio -> head;
 		int posicion_directorio = 0;
-		printf("LS ANTES:\n");
-		cz_ls();
+		// printf("LS ANTES:\n");
+		// cz_ls();
 		while (directorio_actual != NULL){
 			unsigned char no_nulo;
 			no_nulo = '\x01';
 			if (*directorio_actual -> valido == no_nulo){
 				if (strcmp(directorio_actual -> nombre, filename) == 0){
-					printf("HHHHHHHH\n");
-					imprimir_bitmaps2();
-					printf("HHHHHHHH\n");
+					// printf("HHHHHHHH\n");
+					// imprimir_bitmaps2();
+					// printf("HHHHHHHH\n");
+					bindice = bindice_init();
 					setear_estructuras(filename, 0);
-					printf("FILENAME encontrado en bloque directorio \nCambiando su validez a 0\n");
+					// printf("FILENAME encontrado en bloque directorio \nCambiando su validez a 0\n");
 					*directorio_actual -> valido = 0;
-					printf("validez cambiada a 0\n");
-					printf("Revisando su indice: %d \n", byte_a_decimal(directorio_actual -> indice, 4));
-					printf("El indice en la estructura es: %d \n", bindice -> num_bloque); 
-					printf("BITMAP de indice numero %d ANTES: \n", bindice -> num_bloque);
-					imprimir_bitmaps(bindice -> num_bloque);
+					// printf("validez cambiada a 0\n");
+					// printf("Revisando su indice: %d \n", byte_a_decimal(directorio_actual -> indice, 4));
+					// printf("El indice en la estructura es: %d \n", bindice -> num_bloque); 
+					// printf("BITMAP de indice numero %d ANTES: \n", bindice -> num_bloque);
+					// imprimir_bitmaps(bindice -> num_bloque);
 					vaciar_bitmap(bindice -> num_bloque);
-					printf("BITMAP de indice numero %d DESPUES: \n", bindice -> num_bloque);
-					imprimir_bitmaps(bindice -> num_bloque);
+					// printf("BITMAP de indice numero %d DESPUES: \n", bindice -> num_bloque);
+					// imprimir_bitmaps(bindice -> num_bloque);
 					for (int i = 0; i < 252; i++){
 						if (bindice -> datos[i] != NULL){
-							printf("BITMAP de dato numero %d ANTES: \n", bindice -> datos[i] -> num_bloque);
-							imprimir_bitmaps(bindice -> datos[i] -> num_bloque);
+							// printf("BITMAP de dato numero %d ANTES: \n", bindice -> datos[i] -> num_bloque);
+							// imprimir_bitmaps(bindice -> datos[i] -> num_bloque);
 							int bloque_dato = bindice -> datos[i] -> num_bloque;
 							vaciar_bitmap(bloque_dato);
-							printf("BITMAP de dato numero %d DESPUES: \n", bindice -> datos[i] -> num_bloque);
-							imprimir_bitmaps(bindice -> datos[i] -> num_bloque);
+							// printf("BITMAP de dato numero %d DESPUES: \n", bindice -> datos[i] -> num_bloque);
+							// imprimir_bitmaps(bindice -> datos[i] -> num_bloque);
 						}
 					}
 
 					if (bindice -> indirecto != NULL){
-						printf("BITMAP de indirecto numero %d ANTES: \n", bindice -> indirecto -> num_bloque);
-						imprimir_bitmaps(bindice -> indirecto -> num_bloque);
+						// printf("BITMAP de indirecto numero %d ANTES: \n", bindice -> indirecto -> num_bloque);
+						// imprimir_bitmaps(bindice -> indirecto -> num_bloque);
 						vaciar_bitmap(bindice -> indirecto -> num_bloque);
-						printf("BITMAP de indirecto numero %d DESPUES: \n", bindice -> indirecto -> num_bloque);
-						imprimir_bitmaps(bindice -> indirecto -> num_bloque);
+						// printf("BITMAP de indirecto numero %d DESPUES: \n", bindice -> indirecto -> num_bloque);
+						// imprimir_bitmaps(bindice -> indirecto -> num_bloque);
 						for (int i = 0; i < 256; i++){
 							if (bindice -> indirecto -> datos[i] != NULL){
-								printf("BITMAP de dato indirecto numero %d ANTES: \n", bindice -> indirecto -> datos[i] -> num_bloque);
-								imprimir_bitmaps(bindice -> indirecto -> datos[i] -> num_bloque);
+								// printf("BITMAP de dato indirecto numero %d ANTES: \n", bindice -> indirecto -> datos[i] -> num_bloque);
+								// imprimir_bitmaps(bindice -> indirecto -> datos[i] -> num_bloque);
 								int bloque_dato = bindice -> indirecto -> datos[i] -> num_bloque;
 								vaciar_bitmap(bloque_dato);
-								printf("BITMAP de dato indirecto numero %d DESPUES: \n", bindice -> indirecto -> datos[i] -> num_bloque);
-								imprimir_bitmaps(bindice -> indirecto -> datos[i] -> num_bloque);
+								// printf("BITMAP de dato indirecto numero %d DESPUES: \n", bindice -> indirecto -> datos[i] -> num_bloque);
+								// imprimir_bitmaps(bindice -> indirecto -> datos[i] -> num_bloque);
 							}
 						}
 					}
 					//actualizar_directorio(posicion_directorio, directorio_actual);
-					printf("LS DESPUES:\n");
-					cz_ls();
+					// printf("LS DESPUES:\n");
+					// cz_ls();
 					return 0;
 				}
 			}
@@ -815,7 +828,7 @@ int cz_rm(char* filename){
 		}
 	}
 	else{
-		printf("No se hacen cambios \n");
+		// printf("No se hacen cambios \n");
 		return 0;
 	}
 	return 1;   			//TODO revisar
@@ -848,8 +861,11 @@ int buscar_espacio_en_bitmap(){
 		for (int i = 0; i < 1024; i++){			//recorrer cada byte del bitmap
 			for (int j = 7; j >= 0; j --){
 				if (!((actual_bitmap -> bits[i] & ( 1 << j )) >> j)){        //si encuentro un bit de cero
-					int resultado = i * 8 + j;
+					int resultado = i * 8 + (7 - j);
 					actual_bitmap -> bits[i] |= 1UL << j;				//cambiar un bit a 1 en actual_bitmap
+					// printf("resultado: %d\n", resultado);
+					// printf("i: %d\n", i);
+					// printf("j: %d\n", j);
 					actualizar_bitmap(actual_bitmap);
 					// printf("i: %d\n", i);
 					// printf("j: %d\n", j);
