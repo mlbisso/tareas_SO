@@ -57,7 +57,7 @@ typedef struct bitmap Bitmap;
 struct bitmap
 {
   // char bits[1024 + 1];
-  unsigned char bits[1024];              //2^10 * 2^13
+  unsigned char bits[1024 + 1];              //2^10 * 2^13
   Bitmap* next_bitmap;
   unsigned int num_bloque;
 };
@@ -78,8 +78,8 @@ typedef struct index BIndice;
 struct index
 {
   unsigned char tamano[4 + 1];
-  char creacion[4 + 1];
-  char modificacion[4 + 1];
+  unsigned char creacion[4 + 1];
+  unsigned char modificacion[4 + 1];
   BDatos* datos[252];
   BIndirecto* indirecto;
   int num_bloque;
@@ -145,4 +145,6 @@ void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp);
 czFILE* setear_estructuras(char * filename, int mode);
 
 void liberar_resto();
+void leer_datos(BDatos* datos, FILE* fp);
+void leer_bindirecto(BIndirecto* bindirecto, FILE* fp);
 

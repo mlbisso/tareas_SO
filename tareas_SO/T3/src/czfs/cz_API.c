@@ -77,14 +77,13 @@ void cz_mount(char* diskfileName){
 		directorio_actual = directorio_actual -> next_directorio;
 		i += 1;
 	}
-
 	//BLOQUES BITMAPS
 	i = 1;
 	Bitmap* actual_bitmap = bitmaps -> head;
 	for (i = 1; i < 9; i ++){
 		fseek(fp, i * 1024, SEEK_SET);
 		fread(actual_bitmap -> bits, 1024, 1, fp);
-		// actual_bitmap -> bits[1024] = '\0';
+		actual_bitmap -> bits[1024] = '\0';
 		actual_bitmap = actual_bitmap -> next_bitmap;
 	}
 	fclose(fp);
@@ -219,7 +218,7 @@ czFILE* cz_open(char* filename, char mode){
 	return NULL;
 }
 
-czFILE* setear_estructuras(char * filename int mode){
+czFILE* setear_estructuras(char * filename, int mode){
 	Directorio* directorio_actual = bdirectorio -> head;
 	// unsigned char indice[4 + 1];
 	while (directorio_actual != NULL){
@@ -228,10 +227,85 @@ czFILE* setear_estructuras(char * filename int mode){
 		}
 		directorio_actual = directorio_actual -> next_directorio;
 	}	
-	//TODO usar directorio_actual -> indice
+
+	//Seteo indice
+	int indice = byte_a_decimal(directorio_actual -> indice, 4);
+	setear_bindice(indice);
+	FILE *fp;
+	fp = fopen(filename_disco, "rb");
+
+	fseek(fp, indice * 1024, SEEK_SET); 	
+	fread(bindice -> tamano, 4, 1, fp);
+	bindice -> tamano[4] = '\0';
+
+	fseek(fp, indice * 1024 + 4, SEEK_SET); 	
+	fread(bindice -> creacion, 4, 1, fp);
+	bindice -> creacion[4] = '\0';
+
+	fseek(fp, indice * 1024 + 8, SEEK_SET); 	
+	fread(bindice -> modificacion, 4, 1, fp);
+	bindice -> modificacion[4] = '\0';
+
+
+	for (int i = 0; i < 252; i ++){
+		unsigned char buffer[4 + 1];
+		fseek(fp, indice * 1024 + 12 + 4 * i, SEEK_SET);
+		fread(buffer, 4, 1, fp);
+		buffer[4] = '\0';
+		if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00){
+			bindice -> datos[i] = NULL;
+		}
+		else{
+			int num_bloque = byte_a_decimal(buffer, 4);
+			BDatos* bloque_datos = bdatos_init(num_bloque);
+			leer_datos(bloque_datos, fp);
+			bindice -> datos[i] = bloque_datos;
+		}
+	}
+
+	fseek(fp, indice * 1024 + 12 + 4 * 252, SEEK_SET);
+	unsigned char buffer[4 + 1];
+	fread(buffer, 4, 1, fp);
+	buffer[4] = '\0';	
+	if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00){
+		bindice -> indirecto = NULL;
+	}
+	else{
+		int num_bloque = byte_a_decimal(buffer, 4);
+		bindirecto -> num_bloque = num_bloque;
+	}
+	leer_bindirecto(bindirecto, fp);
+	bindice -> indirecto = bindirecto;	
+	fclose(fp);
 	czFILE* archivo = czfile_init(filename, mode);
 	return archivo;
 }
+
+void leer_datos(BDatos* datos, FILE* fp){
+	fseek(fp, datos -> num_bloque * 1024, SEEK_SET);
+	fread(datos -> datos, 1024, 1, fp);
+	datos -> datos[1024] = '\0';	
+}
+
+void leer_bindirecto(BIndirecto* bindirecto, FILE* fp){
+	int indice = bindirecto -> num_bloque;
+	for (int i = 0; i < 256; i ++){
+		unsigned char buffer[4 + 1];
+		fseek(fp, indice * 1024 + 4 * i, SEEK_SET);
+		fread(buffer, 4, 1, fp);
+		buffer[4] = '\0';
+		if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00){
+			bindirecto -> datos[i] = NULL;
+		}
+		else{
+			int num_bloque = byte_a_decimal(buffer, 4);
+			BDatos* bloque_datos = bdatos_init(num_bloque);
+			leer_datos(bloque_datos, fp);
+			bindirecto -> datos[i] = bloque_datos;
+		}
+	}	
+}
+
 
 void agregar_direccion(czFILE* archivo){
 	Directorio* directorio_actual = bdirectorio -> head;
@@ -305,6 +379,7 @@ int cz_read(czFILE* file_desc, void* buffer, int nbytes){
 	if (file_desc -> mode == 1){		//si es modo write y quieres leer
 		return -1;
 	}
+	return 0;
 }
 
 int cz_write(czFILE* file_desc, void* buffer, int nbytes){
@@ -613,7 +688,7 @@ int cz_rm(char* filename){ //Falta revisar bindice, bindirecto y bdatos usados y
 		printf("No se hacen cambios \n");
 		return 0;
 	}
-	
+	return -1;   			//TODO revisar
 }
 
 	// if (bdirectorio -> head != NULL){
