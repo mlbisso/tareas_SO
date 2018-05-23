@@ -148,7 +148,7 @@ void liberar_resto();
 void leer_datos(BDatos* datos, FILE* fp);
 void leer_bindirecto(BIndirecto* bindirecto, FILE* fp);
 
-void vaciar_bitmap(int bloque);
+int vaciar_bitmap(int bloque);
 void imprimir_bitmaps(int numero_bitmap);
 void imprimir_bitmaps2();
 

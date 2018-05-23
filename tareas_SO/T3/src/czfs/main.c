@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	// cz_ls();
 	// printf("existe: %d\n", cz_exists("texto.txs"));
 	char or[11 + 1] = "camellp.txt";
-	char dest[11 + 1] = "newcam2.txt";
+	// char dest[11 + 1] = "newcam2.txt";
 	czFILE* file = cz_open(or, 'w');
 	// printear_dir();
 	cz_close(file);
