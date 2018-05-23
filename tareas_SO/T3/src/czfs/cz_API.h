@@ -88,6 +88,7 @@ struct index
 typedef struct czFILE {
   char filename[11 + 1];
   BIndice* indice;
+  int mode;             //0 si es 'r' y 1 si es 'w'
 } czFILE;
 
 // /****************************************************************************/
@@ -118,7 +119,7 @@ BIndice* bindice_init();
 BIndirecto* bindirecto_init();
 BDatos* bdatos_init(int num_bloque);
 
-czFILE* czfile_init(char* filename);
+czFILE* czfile_init(char* filename, int mode);
 
 int buscar_espacio_en_bitmap();
 void actualizar_directorio(int posicion_directorio, Directorio* directorio);
@@ -141,7 +142,7 @@ void cerrar_bloque_datos(BDatos* datos, FILE *fp);
 void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp);
 
 
-czFILE* setear_estructuras(char * filename);
+czFILE* setear_estructuras(char * filename, int mode);
 
 void liberar_resto();
 

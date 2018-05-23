@@ -28,16 +28,15 @@ int main(int argc, char *argv[])
 		// printf("posicion_bloque_datos: %d\n", posicion_bloque_datos);		
 		// printf("resto: %d\n", resto);
 		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
-
-	czFILE* file = cz_open("aabaaa.txt", 'w');
-	if (file != NULL){	
-		char texto[13] = "lacasadepapel";
-		int total = cz_write(file, texto, 13);
-		printf("total : %d\n", total);
-	}
-	char filename[11 + 1] = "sisisi.txt";
-	cz_rm(filename);	
-	cz_close(file);
+	cz_ls();
+	printf("existe: %d\n", cz_exists("texto.txs"));
+	// czFILE* file = cz_open("aabaaa.txt", 'w');
+	// if (file != NULL){
+	// 	char texto[13] = "lacasadepapel";
+	// 	int total = cz_write(file, texto, 13);
+	// 	printf("total : %d\n", total);
+	// }
+	// cz_close(file);
 
 	// printf("division %d\n", 7 % 2);
 	// printf("%d\n", cz_exists("aaaaaa.txt"));

@@ -18,6 +18,8 @@ char* filename_disco;
 BIndice* bindice;
 BIndirecto* bindirecto;
 
+int posicion_read = 0;		//en que posicion se quedó para el read
+
 // Process* process_init(int PID)
 // {
 // 	Process* process = malloc(sizeof(Process));
@@ -32,11 +34,12 @@ BIndirecto* bindirecto;
 
 // extern FILE *fp;
 
-czFILE* czfile_init(char* filename){
+czFILE* czfile_init(char* filename, int mode){
 	czFILE* archivo = malloc(sizeof(czFILE));
 	strcpy(archivo -> filename, filename);
 	archivo -> filename[11] = '\0';
 	archivo -> indice = bindice;
+	archivo -> mode = mode;
 	return archivo;
 }
 
@@ -108,9 +111,9 @@ BDirectorio* bdirectorio_init(){
 
 BIndice* bindice_init(){
 	BIndice* bindices = calloc(1, sizeof(BIndice));
-	//for (int i = 0; i < 252; i ++){
-	//	bindices -> datos[i] = NULL;
-	//}
+	// for (int i = 0; i < 252; i ++){
+	// 	bindices -> datos[i] = NULL;
+	// }
 	return bindices;
 }
 
@@ -191,7 +194,7 @@ czFILE* cz_open(char* filename, char mode){
 			return NULL;
 		}
 		else{
-			czFILE* archivo = setear_estructuras(filename);
+			czFILE* archivo = setear_estructuras(filename, 0);
 			return archivo;
 		}
 	}
@@ -203,7 +206,7 @@ czFILE* cz_open(char* filename, char mode){
 			int indice = buscar_espacio_en_bitmap();
 			if (indice != -1 && !directorio_lleno()){				//hay un espacio para guardar el indice de archivo
 				setear_bindice(indice);		//hago que el bloque indice esté vacío
-				czFILE * archivo = czfile_init(filename);
+				czFILE * archivo = czfile_init(filename, 1);
 				agregar_direccion(archivo);
 				return archivo;
 			}
@@ -216,7 +219,7 @@ czFILE* cz_open(char* filename, char mode){
 	return NULL;
 }
 
-czFILE* setear_estructuras(char * filename){
+czFILE* setear_estructuras(char * filename int mode){
 	Directorio* directorio_actual = bdirectorio -> head;
 	// unsigned char indice[4 + 1];
 	while (directorio_actual != NULL){
@@ -226,7 +229,7 @@ czFILE* setear_estructuras(char * filename){
 		directorio_actual = directorio_actual -> next_directorio;
 	}	
 	//TODO usar directorio_actual -> indice
-	czFILE* archivo = czfile_init(filename);
+	czFILE* archivo = czfile_init(filename, mode);
 	return archivo;
 }
 
@@ -298,12 +301,17 @@ int cz_exists(char* filename){
 	return 0;
 }
 
-// int cz_read(czFILE* file_desc, void* buffer, int nbytes){
-
-// }
+int cz_read(czFILE* file_desc, void* buffer, int nbytes){
+	if (file_desc -> mode == 1){		//si es modo write y quieres leer
+		return -1;
+	}
+}
 
 int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 	//TODO cambiar timestamps
+	if (file_desc -> mode == 0){		//si es modo read y quieres escribir
+		return -1;
+	}
 	int bytes_escritos = 0;
 	int tamano = obtener_tamano(file_desc -> indice -> tamano);
 	while (nbytes != 0 || tamano == 520192){					// 508 * 1024
@@ -469,6 +477,7 @@ int byte_a_decimal(unsigned char* tamano, int nbytes){
 }
 
 int cz_close(czFILE* file_desc){
+	posicion_read = 0;
 	if (cz_exists(file_desc -> filename) == 0){			//el archivo no existe en el sistema
 		return 1;
 	}
@@ -559,40 +568,9 @@ void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp){
 	}
 	free(indirecto);
 }
-int cz_mv(char* orig, char *dest){
-	if (strcmp(orig, dest) == 0){   //los nombres son iguales 
-		return 1;
-	}
-	if (cz_exists(dest) == 1){		//si dest ya existe
-		return 1;
-	}
-	if (cz_exists(orig) == 1){
-		Directorio* directorio_actual = bdirectorio -> head;
-		int posicion_directorio = 0;
-		//printf("LS ANTES:\n");
-		//cz_ls();
-		//printf("REVISANDO NOMBRES DE BLOQUES DIRECTORIO\n");
-		while (directorio_actual != NULL){
-			unsigned char no_nulo;
-			no_nulo = '\x01';
-			if (*directorio_actual -> valido == no_nulo){
-				if (strcmp(directorio_actual -> nombre, orig) == 0){
-					//printf("Nombre origen : %s encontrado en bloque directorio! \n", orig);
-					strcpy(directorio_actual -> nombre, dest);
-					//printf("LS DESPUES:\n");
-					//cz_ls();
-					actualizar_directorio(posicion_directorio, directorio_actual);
-					return 0;
-				}
-			}
-			directorio_actual = directorio_actual -> next_directorio;
-			posicion_directorio += 1;
-		}
-	}
-	else {
-		return 1;
-	}
-}
+// int cz_mv(char* orig, char *dest){
+
+// }
 
 int cz_cp(char* orig, char* dest){
 	if (strcmp(orig, dest) == 0){   //los nombres son iguales 
