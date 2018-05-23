@@ -33,12 +33,21 @@ int main(int argc, char *argv[])
 	char or[11 + 1] = "camellp.txt";
 	// char dest[11 + 1] = "newcam2.txt";
 	czFILE* file = cz_open(or, 'w');
-	// printear_dir();
+	if (file != NULL){
+		char textos[13] = "lacasadepapel";
+		int total = cz_write(file, textos, 13);
+		printf("total : %d\n", total);
+	}
 	cz_close(file);
+	czFILE* file_1 = cz_open(or, 'r');
+	unsigned char texto[13];
+	printf("leidos: %d\n", cz_read(file_1, texto, 13));
+	printf("texto: %s\n", texto);
+	cz_close(file_1);
 	// cz_mv(or, dest);
-					imprimir_bitmaps2();
-	cz_rm(or);
-					imprimir_bitmaps2();
+					// imprimir_bitmaps2();
+	// cz_rm(or);
+					// imprimir_bitmaps2();
 
 	// czFILE* file = cz_open("aabaaa.txt", 'w');
 	// if (file != NULL){

@@ -222,8 +222,6 @@ czFILE* cz_open(char* filename, char mode){
 czFILE* setear_estructuras(char * filename, int mode){
 	Directorio* directorio_actual = bdirectorio -> head;
 	// unsigned char indice[4 + 1];
-		printf("0\n");
-
 	while (directorio_actual != NULL){
 		if (*directorio_actual -> valido == 1 && strcmp(directorio_actual->nombre, filename) == 0){
 			break;
@@ -232,7 +230,6 @@ czFILE* setear_estructuras(char * filename, int mode){
 	}	
 
 	//Seteo indice
-	printf("1\n");
 	int indice = byte_a_decimal(directorio_actual -> indice, 4);
 	setear_bindice(indice);
 	FILE *fp;
@@ -250,9 +247,6 @@ czFILE* setear_estructuras(char * filename, int mode){
 	fread(bindice -> modificacion, 4, 1, fp);
 	bindice -> modificacion[4] = '\0';
 
-	printf("2\n");
-
-
 	for (int i = 0; i < 252; i ++){
 		unsigned char buffer[4 + 1];
 		fseek(fp, indice * 1024 + 12 + 4 * i, SEEK_SET);
@@ -269,8 +263,6 @@ czFILE* setear_estructuras(char * filename, int mode){
 		}
 	}
 
-	printf("3\n");
-
 	fseek(fp, indice * 1024 + 12 + 4 * 252, SEEK_SET);
 	unsigned char buffer[4 + 1];
 	fread(buffer, 4, 1, fp);
@@ -285,10 +277,8 @@ czFILE* setear_estructuras(char * filename, int mode){
 	leer_bindirecto(bindirecto, fp);
 	bindice -> indirecto = bindirecto;	
 	fclose(fp);
-		printf("4\n");
 
 	czFILE* archivo = czfile_init(filename, mode);
-		printf("5\n");
 
 	return archivo;
 }
@@ -398,11 +388,48 @@ int cz_exists(char* filename){
 	return 0;
 }
 
+int obtener_datos(BDatos* datos, void* buffer, int nbytes, int leidos, int voy_a_leer){
+	//TODO posicionar en pposicion read
+	if (voy_a_leer > 1024){			//TODO sigue incompleto, falta posicion
+		voy_a_leer = 1024;
+	}
+	// unsigned char *ptr = buffer;
+
+    char *mid = (char*)buffer;
+    char *ptr = (char*)datos->datos;
+
+	memcpy(mid + leidos, ptr, voy_a_leer);
+	leidos += voy_a_leer;
+	return leidos;
+}
+
 int cz_read(czFILE* file_desc, void* buffer, int nbytes){
 	if (file_desc -> mode == 1){		//si es modo write y quieres leer
 		return -1;
 	}
-	return 0;
+	
+	int leidos = 0;
+	int voy_a_leer = nbytes;
+	int voy_a_leer_oficial = nbytes;
+	int maximo = (508 * 1024 - obtener_tamano(file_desc -> indice -> tamano)) - posicion_read; //TODO malo
+	if (voy_a_leer > maximo){
+		voy_a_leer = maximo;
+		voy_a_leer_oficial = maximo;
+	}
+
+	int lectura_un_bloque = 0;
+	for (int i = 0; i < 252; i++){
+		//TODO hacer un continue que setee posicion actual read
+		if (bindice -> datos[i] != NULL){
+			lectura_un_bloque = obtener_datos(bindice -> datos[i], buffer, nbytes, leidos, voy_a_leer);
+			leidos += lectura_un_bloque;
+			voy_a_leer -= lectura_un_bloque;
+		}
+		if (leidos == voy_a_leer_oficial){
+			break;
+		}
+	}
+	return leidos;
 }
 
 int cz_write(czFILE* file_desc, void* buffer, int nbytes){
@@ -632,6 +659,9 @@ int cz_close(czFILE* file_desc){
 	// file_desc -> indice
 	free(file_desc -> indice);
 	free(file_desc);
+	bindice = bindice_init();
+	// free(bindirecto);
+	// bindirecto = bindirecto_init();
 	return 0;
 }
 
@@ -1023,9 +1053,9 @@ int buscar_espacio_en_bitmap(){
 			for (int j = 7; j >= 0; j --){
 				if (!((actual_bitmap -> bits[i] & ( 1 << j )) >> j)){        //si encuentro un bit de cero
 					int resultado = i * 8 + (7 - j);
-					printf("PRIMA: %d\n", actual_bitmap -> bits[i]);
+					// printf("PRIMA: %d\n", actual_bitmap -> bits[i]);
 					actual_bitmap -> bits[i] |= 1UL << j;				//cambiar un bit a 1 en actual_bitmap
-								printf("DOPO: %d\n", actual_bitmap -> bits[i]);
+								// printf("DOPO: %d\n", actual_bitmap -> bits[i]);
 					// printf("resultado: %d\n", resultado);
 					// printf("i: %d\n", i);
 					// printf("j: %d\n", j);
@@ -1083,7 +1113,7 @@ void liberar_resto(){
 	}
 	free(bdirectorio);	
 	// free(bindice);						//TODO revisar
-	free(bindirecto);
+	// free(bindirecto);
 }
 
 void actualizar_indice(BIndice* bindice){
