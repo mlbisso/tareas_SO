@@ -8,7 +8,7 @@ nombres = ["qwerty.txt", "mauros.txt", "ninios.txt", "nanias.txt", "camelo.txt",
 
 for i in range(32):
 	ceros.append(0)
-	ceros.append(1)
+	ceros.append(0)
 
 for i in range(64):
 	a = ceros.pop()
@@ -49,6 +49,13 @@ for i in range(65536):
 	entry = struct.pack('@B', byte)
 	fd_out.write(entry)
 	fd_out.flush()
+
+for i in range(500):
+	for j in range(1024):
+		byte = 0
+		entry = struct.pack('@B', byte)
+		fd_out.write(entry)
+		fd_out.flush()
 
 fd_out.close()
 

@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 	char or[11 + 1] = "camellp.txt";
 	char dest[11 + 1] = "newcam2.txt";
 	czFILE* file = cz_open(or, 'w');
+	// printear_dir();
 	cz_close(file);
 	// cz_mv(or, dest);
 					imprimir_bitmaps2();

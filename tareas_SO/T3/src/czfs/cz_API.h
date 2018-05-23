@@ -151,3 +151,7 @@ void leer_bindirecto(BIndirecto* bindirecto, FILE* fp);
 void vaciar_bitmap(int bloque);
 void imprimir_bitmaps(int numero_bitmap);
 void imprimir_bitmaps2();
+
+void limpiar_rm(int posicion_indice);
+
+void printear_dir();
