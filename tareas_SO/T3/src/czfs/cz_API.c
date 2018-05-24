@@ -397,21 +397,26 @@ int obtener_datos(BDatos* datos, void* buffer, int nbytes, int leidos, int voy_a
 
     char *mid = (char*)buffer;
     char *ptr = (char*)datos->datos;
-
+    // printf("1\n");
 	memcpy(mid + leidos, ptr, voy_a_leer);
+	// printf("2\n");
 	leidos += voy_a_leer;
-	return leidos;
+	// printf("TEXT: %s\n", mid);
+	// printf("voy_a_leer %d\n", voy_a_leer);
+	return voy_a_leer;
 }
 
 int cz_read(czFILE* file_desc, void* buffer, int nbytes){
+	//TODO falta ver bloque indirecto
+	//TODO falta posicion_read
 	if (file_desc -> mode == 1){		//si es modo write y quieres leer
 		return -1;
 	}
-	
+
 	int leidos = 0;
 	int voy_a_leer = nbytes;
 	int voy_a_leer_oficial = nbytes;
-	int maximo = (508 * 1024 - obtener_tamano(file_desc -> indice -> tamano)) - posicion_read; //TODO malo
+	int maximo = (obtener_tamano(file_desc -> indice -> tamano)) - posicion_read; //TODO malo
 	if (voy_a_leer > maximo){
 		voy_a_leer = maximo;
 		voy_a_leer_oficial = maximo;
@@ -419,8 +424,11 @@ int cz_read(czFILE* file_desc, void* buffer, int nbytes){
 
 	int lectura_un_bloque = 0;
 	for (int i = 0; i < 252; i++){
+		// printf("voy_a_leer_oficial %d\n", voy_a_leer_oficial);
 		//TODO hacer un continue que setee posicion actual read
+		// printf("i: %d\n", i);
 		if (bindice -> datos[i] != NULL){
+			// printf("i: %d\n", i);
 			lectura_un_bloque = obtener_datos(bindice -> datos[i], buffer, nbytes, leidos, voy_a_leer);
 			leidos += lectura_un_bloque;
 			voy_a_leer -= lectura_un_bloque;
