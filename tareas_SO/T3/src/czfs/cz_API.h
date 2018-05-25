@@ -157,3 +157,4 @@ void limpiar_rm(int posicion_indice);
 void printear_dir();
 
 int obtener_datos(BDatos* datos, void* buffer, int nbytes, int leidos, int voy_a_leer, int inicio_bloque);
+void actualizar_disco();

@@ -17,6 +17,7 @@ Bitmaps * bitmaps;
 char* filename_disco;
 BIndice* bindice;
 BIndirecto* bindirecto;
+unsigned char disco_total[64 * 1048576 + 1];
 
 int posicion_read = 0;		//en que posicion se quedó para el read
 
@@ -43,13 +44,17 @@ czFILE* czfile_init(char* filename, int mode){
 	return archivo;
 }
 
+// void config_disco_total(){
+// 	FILE * fp;
+// }
+
 void cz_mount(char* diskfileName){
 	bdirectorio = bdirectorio_init();
 	bitmaps = bitmaps_init();	
 	bindice = bindice_init();
 	bindirecto = bindirecto_init();
-	FILE *fp;
 	filename_disco = diskfileName;
+	FILE *fp;
    	// char buffer[1024];
  //   	char valido[64];    //64 entradas por 1B   //TODO unsigned int?????
 	// char nombre[704];  //64 entradas por 11B
@@ -58,6 +63,9 @@ void cz_mount(char* diskfileName){
 	int i = 0;
 
 	//BLOQUE DIRECTORIO
+	fseek(fp, 0, SEEK_SET);
+	fread(disco_total, 64 * 1048576, 1, fp);
+	disco_total[64 * 1048576] = '\0';
 	while(directorio_actual != NULL){
 		fseek(fp, i * 16, SEEK_SET); 
 		fread(directorio_actual -> valido, 1, 1, fp);
@@ -194,7 +202,7 @@ czFILE* cz_open(char* filename, char mode){
 			return NULL;
 		}
 		else{
-			czFILE* archivo = setear_estructuras(filename, 0);
+			czFILE* archivo = setear_estructuras(filename, 0);		//TODO malo
 			return archivo;
 		}
 	}
@@ -230,27 +238,34 @@ czFILE* setear_estructuras(char * filename, int mode){
 	}	
 
 	//Seteo indice
+	printf("1\n");
 	int indice = byte_a_decimal(directorio_actual -> indice, 4);
 	setear_bindice(indice);
 	FILE *fp;
 	fp = fopen(filename_disco, "rb");
 
-	fseek(fp, indice * 1024, SEEK_SET); 	
-	fread(bindice -> tamano, 4, 1, fp);
+	// fseek(fp, indice * 1024, SEEK_SET); 	
+	// fread(bindice -> tamano, 4, 1, fp);
+
+	memcpy(bindice -> tamano, disco_total + indice * 1024, 4);
 	bindice -> tamano[4] = '\0';
 
-	fseek(fp, indice * 1024 + 4, SEEK_SET); 	
-	fread(bindice -> creacion, 4, 1, fp);
+	// fseek(fp, indice * 1024 + 4, SEEK_SET); 	
+	// fread(bindice -> creacion, 4, 1, fp);
+	memcpy(bindice -> creacion, disco_total + indice * 1024 + 4, 4);
 	bindice -> creacion[4] = '\0';
 
-	fseek(fp, indice * 1024 + 8, SEEK_SET); 	
-	fread(bindice -> modificacion, 4, 1, fp);
+	// fseek(fp, indice * 1024 + 8, SEEK_SET); 	
+	// fread(bindice -> modificacion, 4, 1, fp);
+	memcpy(bindice -> modificacion, disco_total + indice * 1024 + 8, 4);
 	bindice -> modificacion[4] = '\0';
+	printf("2\n");
 
 	for (int i = 0; i < 252; i ++){
 		unsigned char buffer[4 + 1];
-		fseek(fp, indice * 1024 + 12 + 4 * i, SEEK_SET);
-		fread(buffer, 4, 1, fp);
+		// fseek(fp, indice * 1024 + 12 + 4 * i, SEEK_SET);
+		// fread(buffer, 4, 1, fp);
+		memcpy(buffer, disco_total + indice * 1024 + 12 + 4 * i, 4);
 		buffer[4] = '\0';
 		if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00){
 			bindice -> datos[i] = NULL;
@@ -263,10 +278,13 @@ czFILE* setear_estructuras(char * filename, int mode){
 		}
 	}
 
-	fseek(fp, indice * 1024 + 12 + 4 * 252, SEEK_SET);
+	// fseek(fp, indice * 1024 + 12 + 4 * 252, SEEK_SET);
 	unsigned char buffer[4 + 1];
-	fread(buffer, 4, 1, fp);
+	// fread(buffer, 4, 1, fp);
+	memcpy(buffer, disco_total + indice * 1024 + 12 + 4 * 252, 4);
 	buffer[4] = '\0';	
+		printf("3\n");
+
 	if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00){
 		bindice -> indirecto = NULL;
 	}
@@ -274,7 +292,10 @@ czFILE* setear_estructuras(char * filename, int mode){
 		int num_bloque = byte_a_decimal(buffer, 4);
 		bindirecto -> num_bloque = num_bloque;
 	}
-	leer_bindirecto(bindirecto, fp);
+		printf("4\n");
+
+	leer_bindirecto(bindirecto, fp);		//TODO malo
+
 	bindice -> indirecto = bindirecto;	
 	fclose(fp);
 
@@ -284,8 +305,12 @@ czFILE* setear_estructuras(char * filename, int mode){
 }
 
 void leer_datos(BDatos* datos, FILE* fp){
-	fseek(fp, datos -> num_bloque * 1024, SEEK_SET);
-	fread(datos -> datos, 1024, 1, fp);
+	// fseek(fp, datos -> num_bloque * 1024, SEEK_SET);
+	// fread(datos -> datos, 1024, 1, fp);
+
+	// printf("datos: %d\n", datos -> num_bloque * 1024);
+	printf("yyyyyyyyyyyy\n");
+	memcpy(datos -> datos, disco_total + datos -> num_bloque * 1024, 1024);		//TODO malo
 	datos -> datos[1024] = '\0';	
 }
 
@@ -293,16 +318,32 @@ void leer_bindirecto(BIndirecto* bindirecto, FILE* fp){
 	int indice = bindirecto -> num_bloque;
 	for (int i = 0; i < 256; i ++){
 		unsigned char buffer[4 + 1];
-		fseek(fp, indice * 1024 + 4 * i, SEEK_SET);
-		fread(buffer, 4, 1, fp);
+		// fseek(fp, indice * 1024 + 4 * i, SEEK_SET);
+		// fread(buffer, 4, 1, fp);
+		memcpy(buffer, disco_total + indice * 1024 + 4 * i, 4);	
+			printf("5\n");
 		buffer[4] = '\0';
 		if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00){
 			bindirecto -> datos[i] = NULL;
 		}
 		else{
+				printf("6\n");
+
 			int num_bloque = byte_a_decimal(buffer, 4);
+				printf("7\n");
+
+			if (num_bloque <= 0 || num_bloque >= 65536){
+				bindirecto -> datos[i] = NULL;  	//TODO funciona?
+				continue;
+			}
+			printf("num_bloque: %d\n", num_bloque);
+
 			BDatos* bloque_datos = bdatos_init(num_bloque);
-			leer_datos(bloque_datos, fp);
+				printf("8\n");
+
+			leer_datos(bloque_datos, fp);		//TODO malo
+				printf("9\n");
+
 			bindirecto -> datos[i] = bloque_datos;
 		}
 	}	
@@ -379,12 +420,14 @@ void setear_bindice(int indice){
 
 int cz_exists(char* filename){
 	Directorio* directorio_actual = bdirectorio -> head;
+	// printf("filename: %s\n", filename);
 	while (directorio_actual != NULL){
 		if (*directorio_actual -> valido == 1 && strcmp(directorio_actual->nombre, filename) == 0){
 			return 1;
 		}
 		directorio_actual = directorio_actual -> next_directorio;
-	}	
+	}
+	// printf("retorno 0\n");	
 	return 0;
 }
 
@@ -484,10 +527,13 @@ int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 	int tamano = obtener_tamano(file_desc -> indice -> tamano);
 	// printf("tamano %d\n", tamano);
 	while (nbytes != 0 || tamano == 520192){					// 508 * 1024
+		// printf("nbytes: %d\n", nbytes);
 		tamano = obtener_tamano(file_desc -> indice -> tamano);
 		int posicion_bloque_datos = (int)(tamano/1024);  		//donde quiero escribir
 		int resto = tamano - posicion_bloque_datos * 1024;		
 		int bytes_a_usar_en_bloque_actual = 1024 - resto;
+		// printf("posicion_bloque_datos: %d\n", posicion_bloque_datos);
+		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
 		// int t = 252 * 1024;
 		// printf("posicion_bloque_datos: %d\n", (int)(t/1024));		
 		// printf("resto: %d\n", t - posicion_bloque_datos * 1024);
@@ -518,6 +564,7 @@ int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 
 		if (file_desc -> indice -> datos[posicion_bloque_datos] == NULL){	//hay que crear un bloque de datos
 			int num_bloque = buscar_espacio_en_bitmap();
+			// printf("num_bloque %d\n", num_bloque);
 			if (num_bloque != -1){			//si hay espacio para un bloque
 				BDatos* bloque_datos = bdatos_init(num_bloque);
 				file_desc -> indice -> datos[posicion_bloque_datos] = bloque_datos;
@@ -547,15 +594,20 @@ int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 			j += 1;
 		}
 		actualizar_tamano(file_desc, j);
+		// printf("nuevo_tamano %d\n", obtener_tamano(file_desc->indice->tamano));
 		nbytes -= j;
 		bytes_escritos += j;
 		tamano = obtener_tamano(file_desc -> indice -> tamano);
+				// printf("nbytes: %d\n", nbytes);
 	}
 	// for (int i = 0; i < 252; i ++){
 	// 	if (file_desc -> indice -> datos[i] == NULL){
 
 	// 	}
 	// }
+	// printf("cz_ls\n");
+	// cz_ls();
+	// printf("cz_ls\n");
 	return bytes_escritos;
 }
 
@@ -658,19 +710,29 @@ int cz_close(czFILE* file_desc){
 	fp = fopen(filename_disco, "wb");
 
 	int num_bloque = file_desc -> indice -> num_bloque;
-	fseek(fp, num_bloque * 1024, SEEK_SET); 
-	fwrite(file_desc -> indice -> tamano, 4, 1, fp);
+	// fseek(fp, num_bloque * 1024, SEEK_SET); 
+	// fwrite(file_desc -> indice -> tamano, 4, 1, fp);
 
-	fseek(fp, num_bloque * 1024 + 4, SEEK_SET);
-	fwrite(file_desc -> indice -> creacion, 11, 1, fp);
+	memcpy(disco_total + num_bloque * 1024, file_desc -> indice -> tamano, 4);
 
-	fseek(fp, num_bloque * 1024 + 8, SEEK_SET);
-	fwrite(file_desc -> indice -> modificacion, 4, 1, fp);
+
+	// fseek(fp, num_bloque * 1024 + 4, SEEK_SET);
+	// fwrite(file_desc -> indice -> creacion, 11, 1, fp);
+
+	memcpy(disco_total + num_bloque * 1024 + 4, file_desc -> indice -> creacion, 11);
+
+
+	// fseek(fp, num_bloque * 1024 + 8, SEEK_SET);
+	// fwrite(file_desc -> indice -> modificacion, 4, 1, fp);
+
+	memcpy(disco_total + num_bloque * 1024 + 8, file_desc -> indice -> modificacion, 4);
+
 
 	for (int i = 0; i < 252; i ++){
-		fseek(fp, num_bloque * 1024 + 12 + 4 * i, SEEK_SET);
+		// fseek(fp, num_bloque * 1024 + 12 + 4 * i, SEEK_SET);
 		if (file_desc -> indice -> datos[i] == NULL){
-			fwrite(sin_bloque, 4, 1, fp);
+			// fwrite(sin_bloque, 4, 1, fp);
+			memcpy(disco_total + num_bloque * 1024 + 12 + 4 * i, sin_bloque, 4);
 		}
 		else{
 			unsigned char input[4];
@@ -679,13 +741,16 @@ int cz_close(czFILE* file_desc){
 			input[1] = (num >> 16) & 0xFF;
 			input[2] = (num >> 8) & 0xFF;
 			input[3] = num & 0xFF;
-			fwrite(input, 4, 1, fp);
+			// fwrite(input, 4, 1, fp);
+			memcpy(disco_total + num_bloque * 1024 + 12 + 4 * i, input, 4);
 			cerrar_bloque_datos(file_desc -> indice -> datos[i], fp);
 		}
+		// printf("i: %d\n", i);
 	}
-	fseek(fp, num_bloque * 1024 + 12 + 4 * 252, SEEK_SET);
+	// fseek(fp, num_bloque * 1024 + 12 + 4 * 252, SEEK_SET);
 	if (file_desc -> indice -> indirecto == NULL){
-		fwrite(sin_bloque, 4, 1, fp);
+		// fwrite(sin_bloque, 4, 1, fp);
+		memcpy(disco_total + num_bloque * 1024 + 12 + 4 * 252, sin_bloque, 4);
 	}
 	else{
 		unsigned char input[4];
@@ -695,6 +760,7 @@ int cz_close(czFILE* file_desc){
 		input[2] = (num >> 8) & 0xFF;
 		input[3] = num & 0xFF;
 		fwrite(input, 4, 1, fp);
+		memcpy(disco_total + num_bloque * 1024 + 12 + 4 * 252, input, 4);
 		cerrar_bloque_indirecto(file_desc -> indice -> indirecto, fp);
 	}
 
@@ -704,16 +770,19 @@ int cz_close(czFILE* file_desc){
 	free(file_desc -> indice);
 	free(file_desc);
 	bindice = bindice_init();
+	actualizar_disco();
 	// free(bindirecto);
 	// bindirecto = bindirecto_init();
 	return 0;
 }
 
 void cerrar_bloque_datos(BDatos* datos, FILE* fp){
-	int num_bloque = datos->num_bloque;
-	fseek(fp, num_bloque * 1024, SEEK_SET); 
-	fwrite(datos -> datos, 1024, 1, fp);
+	// int num_bloque = datos->num_bloque;
+	// fseek(fp, , SEEK_SET); 
+	// fwrite(, 1024, 1, fp);
+	memcpy(disco_total + datos -> num_bloque * 1024, datos -> datos, 1024);
 	free(datos);
+	// actualizar_disco();
 }
 
 void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp){
@@ -723,9 +792,10 @@ void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp){
 		sin_bloque[i] = 0x00;
 	}
 	for (int i = 0; i < 256; i ++){
-		fseek(fp, num_bloque * 1024 + 4 * i, SEEK_SET);
+		// fseek(fp, num_bloque * 1024 + 4 * i, SEEK_SET);
 		if (indirecto -> datos[i] == NULL){
-			fwrite(sin_bloque, 4, 1, fp);
+			// fwrite(sin_bloque, 4, 1, fp);
+			memcpy(disco_total + num_bloque * 1024 + 4 * i, sin_bloque, 4);
 		}
 		else{
 			unsigned char input[4];
@@ -734,11 +804,13 @@ void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp){
 			input[1] = (num >> 16) & 0xFF;
 			input[2] = (num >> 8) & 0xFF;
 			input[3] = num & 0xFF;
-			fwrite(input, 4, 1, fp);
+			// fwrite(input, 4, 1, fp);
+			memcpy(disco_total + num_bloque * 1024 + 4 * i, input, 4);
 			cerrar_bloque_datos(indirecto -> datos[i], fp);
 		}	
 	}
 	free(indirecto);
+	// actualizar_disco();
 }
 
 int cz_mv(char* orig, char *dest){
@@ -765,6 +837,7 @@ int cz_mv(char* orig, char *dest){
   					//printf("LS DESPUES:\n");
   					//cz_ls();
  					actualizar_directorio(posicion_directorio, directorio_actual);
+ 					actualizar_disco();
   					return 0;
   				}
   			}
@@ -786,6 +859,7 @@ int cz_cp(char* orig, char* dest){
 		return 1;
 	}
 	//TODO actualizar archivo
+	actualizar_disco();
 	return 0; 						//no hubo errores
 }
 
@@ -839,12 +913,12 @@ int vaciar_bitmap(int bloque){			//TODO MALO MALO
 				int resultado = i * 8 + (7 - j);
 				if (resultado == bloque){
 					// printf("que? %d\n", bloque);
-					if (((actual_bitmap -> bits[i] & ( 1 << j )) >> j)){ 
-						printf(":)))))))))\n");
-					}       //si encuentro un bit de cero
-					printf("ANTES %d\n", actual_bitmap -> bits[i]);						
+					// if (((actual_bitmap -> bits[i] & ( 1 << j )) >> j)){ 
+					// 	printf(":)))))))))\n");
+					// }       //si encuentro un bit de cero
+					// printf("ANTES %d\n", actual_bitmap -> bits[i]);						
 					actual_bitmap -> bits[i] &= ~(1UL << j);
-					printf("DESPUES %d\n\n", actual_bitmap -> bits[i]);						
+					// printf("DESPUES %d\n\n", actual_bitmap -> bits[i]);						
 					// if (bloque == 9){
 					// 	printf("i %d\n", i);
 					// 	printf("j %d\n", j);
@@ -944,30 +1018,34 @@ void limpiar_rm(int posicion_indic){
 	buffer[4] = '\0';
 
 	int num_bloque;
-	printf("Ind: %d\n", posicion_indice);
+	// printf("Ind: %d\n", posicion_indice);
 	int i;
 	for (i = 0; i < 252; i ++){
-		fseek(fp, posicion_indice * 1024 + 12 + 4 * i, SEEK_SET);
-		fread(buffer, 4, 1, fp);				//lee el número de un bloque de datos
+		// fseek(fp, posicion_indice * 1024 + 12 + 4 * i, SEEK_SET);
+		// fread(buffer, 4, 1, fp);				//lee el número de un bloque de datos
+	
+		memcpy(buffer, disco_total + posicion_indice * 1024 + 12 + 4 * i, 4);
 		buffer[4] = '\0';
 		num_bloque = byte_a_decimal(buffer, 4);		
 		if (num_bloque != 0){					//si no es cero, hay un bloque de datos
 			vaciar_bitmap(num_bloque);
 		}
 	}
-	printf("QQ\n");
-	fseek(fp, posicion_indice * 1024 + 12 + 4 * i, SEEK_SET);
-	fread(buffer, 4, 1, fp);
+	// printf("QQ\n");
+	// fseek(fp, posicion_indice * 1024 + 12 + 4 * i, SEEK_SET);
+	// fread(buffer, 4, 1, fp);
+	memcpy(buffer, disco_total + posicion_indice * 1024 + 12 + 4 * i, 4);
 	buffer[4] = '\0';
 	num_bloque = byte_a_decimal(buffer, 4);	
-		printf("QQ\n");
+		// printf("QQ\n");
 	
 	if (num_bloque != 0){					//si no es cero, hay un bloque indirecto
 		vaciar_bitmap(num_bloque);			//saca de bitmap el indirecto
 		int otro_numero = 0;
 		for (int i = 0; i < 256; i ++){
-			fseek(fp, num_bloque * 1024 + 4 * i, SEEK_SET);
-			fread(buffer, 4, 1, fp);				//lee el número de un bloque de datos
+			// fseek(fp, num_bloque * 1024 + 4 * i, SEEK_SET);
+			// fread(buffer, 4, 1, fp);				//lee el número de un bloque de datos
+			memcpy(buffer, disco_total + num_bloque * 1024 + 4 * i, 4);
 			buffer[4] = '\0';
 			otro_numero = byte_a_decimal(buffer, 4);		
 			if (otro_numero != 0){					//si no es cero, hay un bloque de datos
@@ -1055,6 +1133,7 @@ int cz_rm(char* filename){
 					//actualizar_directorio(posicion_directorio, directorio_actual);
 					// printf("LS DESPUES:\n");
 					// cz_ls();
+					actualizar_disco();
 					return 0;
 				}
 			}
@@ -1064,6 +1143,7 @@ int cz_rm(char* filename){
 	}
 	else{
 		// printf("No se hacen cambios \n");
+		actualizar_disco();
 		return 0;
 	}
 	return 1;   			//TODO revisar
@@ -1117,27 +1197,45 @@ int buscar_espacio_en_bitmap(){
 }
 
 void actualizar_directorio(int posicion_directorio, Directorio* directorio){
+	// FILE *fp;
+	// fp = fopen(filename_disco, "wb");
+
+	// fseek(fp, posicion_directorio * 16, SEEK_SET); 
+	// fwrite(directorio -> valido, 1, 1, fp);
+
+	// fseek(fp, 1 + posicion_directorio * 16, SEEK_SET);
+	// fwrite(directorio -> nombre, 11, 1, fp);
+
+	// fseek(fp, 12 + posicion_directorio * 16, SEEK_SET);
+	// fwrite(directorio-> indice, 4, 1, fp);
+
+	// fclose(fp);
+
+	memcpy(disco_total + posicion_directorio * 16, directorio -> valido, 1);
+	memcpy(disco_total + 1 + posicion_directorio * 16, directorio -> nombre, 11);
+	memcpy(disco_total + 12 + posicion_directorio * 16, directorio -> indice, 4);
+
+	// actualizar_disco();
+}
+
+void actualizar_disco(){
 	FILE *fp;
 	fp = fopen(filename_disco, "wb");
-
-	fseek(fp, posicion_directorio * 16, SEEK_SET); 
-	fwrite(directorio -> valido, 1, 1, fp);
-
-	fseek(fp, 1 + posicion_directorio * 16, SEEK_SET);
-	fwrite(directorio -> nombre, 11, 1, fp);
-
-	fseek(fp, 12 + posicion_directorio * 16, SEEK_SET);
-	fwrite(directorio-> indice, 4, 1, fp);
-
-	fclose(fp);
+	fseek(fp, 0, SEEK_SET); 
+	fwrite(disco_total, 64 * 1048576, 1, fp);
+	fclose(fp);	
 }
 
 void actualizar_bitmap(Bitmap* bitmap){
-	FILE *fp;
-	fp = fopen(filename_disco, "wb");
-	fseek(fp, bitmap -> num_bloque * 1024, SEEK_SET); 
-	fwrite(bitmap -> bits, 1024, 1, fp);
-	fclose(fp);
+	// FILE *fp;
+	// fp = fopen(filename_disco, "wb");
+	// printf("num_bloque: %d\n", bitmap -> num_bloque);
+	// fseek(fp, bitmap -> num_bloque * 1024, SEEK_SET); 
+	// printf("bitmap_bits %s\n", bitmap -> bits);
+	// fwrite(bitmap -> bits, 1024, 1, fp);
+	// fclose(fp);
+	memcpy(disco_total + bitmap->num_bloque * 1024, bitmap->bits, 1024);
+	// actualizar_disco();
 }
 
 void liberar_resto(){
