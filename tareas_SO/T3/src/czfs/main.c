@@ -30,26 +30,44 @@ int main(int argc, char *argv[])
 		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
 	cz_ls();
 	// printf("existe: %d\n", cz_exists("texto.txs"));
-	char or[11 + 1] = "chest.wav";
+	char or[11 + 1] = "texts.txt";
 	// // char dest[11 + 1] = "newcam2.txt";
-	czFILE* file = cz_open(or, 'r');
-	int tamano = obtener_tamano(file -> indice -> tamano);
-	printf("tamano: %d\n", tamano);
+	czFILE* file = cz_open(or, 'w');
+	unsigned char buf[2] = "1";
+	// printf("%s\n", buf);
+	buf[1] = '\0';
+	cz_write(file, buf, 1);
+	// cz_close(file);
+	// czFILE* file_1 = cz_open(or, 'w');
+	// // ]unsigned char buf[13] = "123456789000";
+	// // ]uf[12] = '\0';
+	// unsigned char buff[13];
+	// cz_read(file_1, buff, 12);
+	// printf("buff %s\n", buff);
+	// cz_close(file);
+	// int tamano = obtener_tamano(file -> indice -> tamano);
+	// printf("tamano: %d\n", tamano);
 	// if (file != NULL){
 	// 	char textos[13] = "lacasadepapel";
 	// 	int total = cz_write(file, textos, 13);
 	// 	printf("total : %d\n", total);
 	// }
 	// cz_close(file);
-	// czFILE* file_1 = cz_open(or, 'r');
-	unsigned char texto[tamano];
-	int leidos = cz_read(file, texto, tamano);
-	printf("leidos: %d\n", leidos);
-	printf("texto: %s\n", texto);
-	if (leidos == tamano){
-		printf("OK\n");
-	}
-	// cz_close(file_1);
+	// // czFILE* file_1 = cz_open(or, 'r');
+	// unsigned char textos[1 + 1];
+	// int leidos = cz_read(file, textos, 1);
+	// textos[1] = '\0';
+
+	// unsigned char texto[1 + 1];
+	// cz_read(file, texto, 1);
+	// texto[1] = '\0';
+
+	// // printf("leidos: %d\n", leidos);
+	// printf("texto: %s\n", texto);
+	// if (leidos == tamano){
+	// 	printf("OK\n");
+	// }
+	// cz_close(file);
 	// cz_mv(or, dest);
 					// imprimir_bitmaps2();
 	// cz_rm(or);
@@ -82,6 +100,6 @@ int main(int argc, char *argv[])
 	// 								   //se lean 20 bytes pow(2,8) veces---->bloques
 	// printf("DIRECCIÓN FÍSICA: %u\n", buffer[0]);
 
-	liberar_resto();
+	// liberar_resto();			TODO descomentar
 	return 0;
 }
