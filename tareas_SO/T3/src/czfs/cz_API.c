@@ -13,6 +13,8 @@
 
 
 BDirectorio * bdirectorio;
+// bdirectorio = bdirectorio_init();
+// bdirectorio = NULL;
 Bitmaps * bitmaps;
 char* filename_disco;
 BIndice* bindice;
@@ -98,13 +100,13 @@ void cz_mount(char* diskfileName){
 }
 
 Directorio* directorio_init(){
-	Directorio* directorio = malloc(sizeof(Directorio));
+	Directorio* directorio = calloc(1, sizeof(Directorio));
 	directorio -> next_directorio = NULL;
 	return directorio;
 }
 
 BDirectorio* bdirectorio_init(){
-	BDirectorio* Bdirectorio = malloc(sizeof(BDirectorio));
+	BDirectorio* Bdirectorio = calloc(1, sizeof(BDirectorio));
 	Bdirectorio -> count = 0;
 	Bdirectorio -> head = NULL;
 	Bdirectorio -> tail = NULL;
@@ -126,7 +128,7 @@ BIndice* bindice_init(){
 }
 
 BIndirecto* bindirecto_init(){
-	BIndirecto* bindirecto = malloc(sizeof(BIndirecto));
+	BIndirecto* bindirecto = calloc(1, sizeof(BIndirecto));
 	// for (int i = 0; i < 256; i ++){
 	// 	  bindirecto -> datos[i] = NULL;
 	// }
@@ -134,7 +136,7 @@ BIndirecto* bindirecto_init(){
 }
 
 BDatos* bdatos_init(int num_bloque){
-	BDatos* bdatos = malloc(sizeof(BDatos));
+	BDatos* bdatos = calloc(1, sizeof(BDatos));
 	for (int i = 0; i < 1024; i ++){
 		bdatos -> datos[i] = 0x00;
 	}	
@@ -157,13 +159,13 @@ void directorio_insert(BDirectorio* Bdirectorio, Directorio* new){
 }
 
 Bitmap* bitmap_init(unsigned int num){
-	Bitmap* bitmap = malloc(sizeof(Bitmap));
+	Bitmap* bitmap = calloc(1, sizeof(Bitmap));
 	bitmap -> num_bloque = num;
 	return bitmap;
 }
 
 Bitmaps* bitmaps_init(){
-	Bitmaps* bitymaps = malloc(sizeof(Bitmaps));
+	Bitmaps* bitymaps = calloc(1, sizeof(Bitmaps));
 	bitymaps -> count = 0;
 	bitymaps -> head = NULL;
 	bitymaps -> tail = NULL;
@@ -238,7 +240,7 @@ czFILE* setear_estructuras(char * filename, int mode){
 	}	
 
 	//Seteo indice
-	printf("1\n");
+	// printf("1\n");
 	int indice = byte_a_decimal(directorio_actual -> indice, 4);
 	setear_bindice(indice);
 	FILE *fp;
@@ -259,7 +261,7 @@ czFILE* setear_estructuras(char * filename, int mode){
 	// fread(bindice -> modificacion, 4, 1, fp);
 	memcpy(bindice -> modificacion, disco_total + indice * 1024 + 8, 4);
 	bindice -> modificacion[4] = '\0';
-	printf("2\n");
+	// printf("2\n");
 
 	for (int i = 0; i < 252; i ++){
 		unsigned char buffer[4 + 1];
@@ -283,7 +285,7 @@ czFILE* setear_estructuras(char * filename, int mode){
 	// fread(buffer, 4, 1, fp);
 	memcpy(buffer, disco_total + indice * 1024 + 12 + 4 * 252, 4);
 	buffer[4] = '\0';	
-		printf("3\n");
+		// printf("3\n");
 
 	if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00){
 		bindice -> indirecto = NULL;
@@ -292,7 +294,7 @@ czFILE* setear_estructuras(char * filename, int mode){
 		int num_bloque = byte_a_decimal(buffer, 4);
 		bindirecto -> num_bloque = num_bloque;
 	}
-		printf("4\n");
+		// printf("4\n");
 
 	leer_bindirecto(bindirecto, fp);		//TODO malo
 
@@ -309,7 +311,7 @@ void leer_datos(BDatos* datos, FILE* fp){
 	// fread(datos -> datos, 1024, 1, fp);
 
 	// printf("datos: %d\n", datos -> num_bloque * 1024);
-	printf("yyyyyyyyyyyy\n");
+	// printf("yyyyyyyyyyyy\n");
 	memcpy(datos -> datos, disco_total + datos -> num_bloque * 1024, 1024);		//TODO malo
 	datos -> datos[1024] = '\0';	
 }
@@ -321,28 +323,28 @@ void leer_bindirecto(BIndirecto* bindirecto, FILE* fp){
 		// fseek(fp, indice * 1024 + 4 * i, SEEK_SET);
 		// fread(buffer, 4, 1, fp);
 		memcpy(buffer, disco_total + indice * 1024 + 4 * i, 4);	
-			printf("5\n");
+			// printf("5\n");
 		buffer[4] = '\0';
 		if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00){
 			bindirecto -> datos[i] = NULL;
 		}
 		else{
-				printf("6\n");
+				// printf("6\n");
 
 			int num_bloque = byte_a_decimal(buffer, 4);
-				printf("7\n");
+				// printf("7\n");
 
 			if (num_bloque <= 0 || num_bloque >= 65536){
 				bindirecto -> datos[i] = NULL;  	//TODO funciona?
 				continue;
 			}
-			printf("num_bloque: %d\n", num_bloque);
+			// printf("num_bloque: %d\n", num_bloque);
 
 			BDatos* bloque_datos = bdatos_init(num_bloque);
-				printf("8\n");
+				// printf("8\n");
 
 			leer_datos(bloque_datos, fp);		//TODO malo
-				printf("9\n");
+				// printf("9\n");
 
 			bindirecto -> datos[i] = bloque_datos;
 		}
@@ -1254,7 +1256,7 @@ void liberar_resto(){
 		free(directorio_a_borrar);
 	}
 	free(bdirectorio);	
-	// free(bindice);						//TODO revisar
+	free(bindice);						//TODO revisar
 	// free(bindirecto);
 }
 

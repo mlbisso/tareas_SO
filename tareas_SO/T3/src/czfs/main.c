@@ -32,15 +32,15 @@ int main(int argc, char *argv[])
 	// printf("existe: %d\n", cz_exists("texto.txs"));
 	char or[11 + 1] = "texti.txt";
 	// // char dest[11 + 1] = "newcam2.txt";
-	// czFILE* file = cz_open(or, 'w');
+	czFILE* file = cz_open(or, 'w');
 
-	// unsigned char buf[2];
-	// buf[0] = 'e';
-	// buf[1] = '\0';
-	// cz_write(file, buf, 1);
+	unsigned char buf[2];
+	buf[0] = 'e';
+	buf[1] = '\0';
+	cz_write(file, buf, 1);
 
-	// // cz_ls();
-	// cz_close(file);
+	// cz_ls();
+	cz_close(file);
 
 	czFILE* file_1 = cz_open(or, 'r');		//TODO problemas aqui
 
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	printf("buff %s\n", buff);
 	cz_close(file_1);
 
-	// liberar_resto();					//TODO tambien esta malo
+	liberar_resto();					//TODO tambien esta malo
 
 
 	// printf("%s\n", buf);
