@@ -206,7 +206,7 @@ czFILE* cz_open(char* filename, char mode){
 			return NULL;
 		}
 		else{
-			czFILE* archivo = setear_estructuras(filename, 0);		//TODO malo
+			czFILE* archivo = setear_estructuras(filename, 0);		
 			return archivo;
 		}
 	}
@@ -298,7 +298,7 @@ czFILE* setear_estructuras(char * filename, int mode){
 	}
 		// printf("4\n");
 
-	leer_bindirecto(bindirecto, fp);		//TODO malo
+	leer_bindirecto(bindirecto, fp);		
 
 	bindice -> indirecto = bindirecto;	
 	fclose(fp);
@@ -864,7 +864,29 @@ int cz_cp(char* orig, char* dest){
 	if (cz_exists(dest) == 1){		//si dest ya existe
 		return 1;
 	}
-	//TODO actualizar archivo
+	// czFILE* archivo = setear_estructuras(orig, dest);
+	// int indice = buscar_espacio_en_bitmap();
+	// if (indice != -1 && !directorio_lleno()){				//hay un espacio para guardar el indice de archivo
+	// 	bindice = bindice_init();
+	// 	bindirecto = bindirecto_init();
+	// 	setear_bindice(indice);		//hago que el bloque indice esté vacío
+	// 	czFILE * archivo = czfile_init(dest, 1);
+	// 	agregar_direccion(archivo);
+	// 	cz_close(archivo);
+	// 	// liberar_resto();
+	// }
+	// else{
+	// 	return 1;
+	// }
+	czFILE* origen = cz_open(orig, 'r');
+	int tamano_origen = obtener_tamano(origen -> indice ->tamano);
+	unsigned char orig_texto[tamano_origen + 1];
+	cz_read(origen, orig_texto, tamano_origen);
+	orig_texto[tamano_origen] = '\0';
+	cz_close(origen);
+	czFILE* destino = cz_open(dest, 'w');
+	cz_write(destino, orig_texto, tamano_origen);
+	cz_close(destino);
 	actualizar_disco();
 	return 0; 						//no hubo errores
 }

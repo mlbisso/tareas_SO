@@ -28,43 +28,56 @@ int main(int argc, char *argv[])
 		// printf("posicion_bloque_datos: %d\n", posicion_bloque_datos);		
 		// printf("resto: %d\n", resto);
 		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
-	cz_ls();
-	// printf("existe: %d\n", cz_exists("texto.txs"));
-	char or[11 + 1] = "punto.txt";
-	// // // char dest[11 + 1] = "newcam2.txt";
-	czFILE* file = cz_open(or, 'w');
 
-	unsigned char buf[2];
-	buf[0] = 'e';
-	buf[1] = '\0';
-	cz_write(file, buf, 1);
-
-	unsigned char bu[3];
-	bu[0] = 'c';
-	bu[1] = 'o';
-	bu[2] = '\0';
-	// bu[3] = '\0';
-
-	cz_write(file, bu, 2);
+	// char orig[11 + 1] = "texto.txt";
+	// char dest[11 + 1] = "holaa.txt";
+	// orig[11] = '\0';
+	// dest[11] = '\0';
+	// cz_cp(orig, dest);
+	// cz_ls();
 
 	// cz_ls();
-	cz_close(file);
-	// liberar_resto();
+	// // printf("existe: %d\n", cz_exists("texto.txs"));
+	char or[11 + 1] = "holaa.txt";
+	// // // // char dest[11 + 1] = "newcam2.txt";
+	// czFILE* file = cz_open(or, 'w');
+
+	// unsigned char buf[2];
+	// buf[0] = 'e';
+	// buf[1] = '\0';
+	// cz_write(file, buf, 1);
+
+	// unsigned char bu[3];
+	// bu[0] = 'c';
+	// bu[1] = 'o';
+	// bu[2] = '\0';
+	// // bu[3] = '\0';
+
+	// cz_write(file, bu, 2);
+
+	// // cz_ls();
+	// cz_close(file);
+	// // liberar_resto();
 
 	czFILE* file_1 = cz_open(or, 'r');		//TODO problemas aqui
-	cz_ls();
+	// cz_ls();
 
-	// printf("human\n");
+	// // printf("human\n");
+
+	int tamano = obtener_tamano(file_1 -> indice -> tamano);
 
 
-	unsigned char buff[2];
-	cz_read(file_1, buff, 1);
-	cz_ls();
 
-	buff[1] = '\0';
+	unsigned char buff[tamano + 1];
+	cz_read(file_1, buff, tamano);
+	buff[tamano] = '\0';
 	printf("buff %s\n", buff);
-	cz_close(file_1);
-	cz_ls();
+	// cz_ls();
+
+	// buff[1] = '\0';
+	// printf("buff %s\n", buff);
+	// cz_close(file_1);
+	// cz_ls();
 
 	liberar_resto();					//TODO tambien esta malo
 	// printf("no me digas\n");
