@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
 
 	cz_mount(argv[1]);
 
+	// char * texto = "habia una vez, ........";
 
 
 	// printf("%d\n", cz_exists("aaaaaa.txt"));

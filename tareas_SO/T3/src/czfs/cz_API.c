@@ -165,6 +165,7 @@ czFILE* cz_open(char* filename, char mode){
 	bindirecto = bindirecto_init();
 	if (mode == 'r'){					//mode 'r'
 		if (cz_exists(filename) == 0){	//si no existe el nombre
+			fprintf(stderr, "%s no existe en directorio principal\n", filename);
 			return NULL;
 		}
 		else{
@@ -174,6 +175,7 @@ czFILE* cz_open(char* filename, char mode){
 	}
 	if (mode == 'w'){				//modo 'w'
 		if (cz_exists(filename) == 1){	//si ya existe el nombre
+			fprintf(stderr, "%s ya existe en directorio principal\n", filename);
 			return NULL;
 		}
 		else{
@@ -188,10 +190,17 @@ czFILE* cz_open(char* filename, char mode){
 				return archivo;
 			}
 			else{
+				if (indice == -1){
+					fprintf(stderr, "no hay otro bloque disponible en bitmap para ser asignado\n");	
+				}
+				else{
+					fprintf(stderr, "el directorio principal se encuentra lleno\n");
+				}
 				return NULL;
 			}
 		}
 	}
+	fprintf(stderr, "el modo entregado no es ni de escritura ni de lectura\n");
 	return NULL;
 }
 
@@ -387,6 +396,7 @@ int obtener_datos(BDatos* datos, void* buffer, int nbytes, int leidos, int voy_a
 
 int cz_read(czFILE* file_desc, void* buffer, int nbytes){
 	if (file_desc -> mode == 1){		//si es modo write y quieres leer
+		fprintf(stderr, "el archivo fue abierto originalmente en modo escritura\n");
 		return -1;
 	}
 
@@ -447,6 +457,7 @@ int cz_read(czFILE* file_desc, void* buffer, int nbytes){
 
 int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 	if (file_desc -> mode == 0){		//si es modo read y quieres escribir
+		fprintf(stderr, "el archivo fue abierto originalmente en modo lectura\n");
 		return -1;
 	}
 	int bytes_escritos = 0;
@@ -472,6 +483,7 @@ int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 					file_desc -> indice -> datos[252 - posicion_bloque_datos] = bloque_datos;
 				}	
 				else{
+					fprintf(stderr, "no hay otro bloque disponible en bitmap para ser asignado\n");	
 					return -1;
 				}					
 			}
@@ -484,6 +496,7 @@ int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 				file_desc -> indice -> datos[posicion_bloque_datos] = bloque_datos;
 			}	
 			else{
+				fprintf(stderr, "no hay otro bloque disponible en bitmap para ser asignado\n");	
 				return -1;
 			}	
 		}
@@ -605,6 +618,7 @@ int byte_a_decimal(unsigned char* tamano, int nbytes){
 int cz_close(czFILE* file_desc){
 	posicion_read = 0;
 	if (cz_exists(file_desc -> filename) == 0){			//el archivo no existe en el sistema
+		fprintf(stderr, "el archivo que desea cerrar %s no existe\n", file_desc -> filename);	
 		return 1;
 	}
 	unsigned char sin_bloque[4];
@@ -663,7 +677,7 @@ int cz_close(czFILE* file_desc){
 		input[1] = (num >> 16) & 0xFF;
 		input[2] = (num >> 8) & 0xFF;
 		input[3] = num & 0xFF;
-		fwrite(input, 4, 1, fp);
+		// fwrite(input, 4, 1, fp);
 		memcpy(disco_total + num_bloque * 1024 + 12 + 4 * 252, input, 4);
 		cerrar_bloque_indirecto(file_desc -> indice -> indirecto, fp);
 	}
@@ -718,10 +732,12 @@ void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp){
 }
 
 int cz_mv(char* orig, char *dest){
- 	if (strcmp(orig, dest) == 0){   //los nombres son iguales 
+ 	if (strcmp(orig, dest) == 0){   //los nombres son iguales
+ 		fprintf(stderr, "los nombres entregados son iguales\n");
  		return 1;
  	}
  	if (cz_exists(dest) == 1){		//si dest ya existe
+  		fprintf(stderr, "%s ya existe en directorio principal\n", dest);
  		return 1;
  	}
  	if (cz_exists(orig) == 1){
@@ -744,16 +760,20 @@ int cz_mv(char* orig, char *dest){
   		}
   	}
  	else {
+ 		fprintf(stderr, "%s no existe en directorio principal\n", orig);
  		return 1;
  	}
+ 	fprintf(stderr, "no hay espacio en directorio principal\n");
  	return 1;
 }
 
 int cz_cp(char* orig, char* dest){
 	if (strcmp(orig, dest) == 0){   //los nombres son iguales 
+ 		fprintf(stderr, "los nombres entregados son iguales\n");
 		return 1;
 	}
 	if (cz_exists(dest) == 1){		//si dest ya existe
+		fprintf(stderr, "%s ya existe en directorio principal\n", dest);
 		return 1;
 	}
 	czFILE* origen = cz_open(orig, 'r');
@@ -916,6 +936,7 @@ int cz_rm(char* filename){
 	// 	actualizar_disco();
 	// 	return 0;
 	// }
+	fprintf(stderr, "%s no existe en directorio principal\n", filename);
 	return 1;   			//TODO revisar
 }
 
