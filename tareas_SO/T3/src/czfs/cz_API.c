@@ -938,21 +938,23 @@ void imprimir_bitmaps(int numero_bitmap){
 
 void imprimir_bitmaps2(){
 	Bitmap* actual_bitmap = bitmaps -> head;
+	int unos = 0;
 	while (actual_bitmap != NULL){
 		for (int i = 0; i < 1024; i++){			//recorrer cada byte del bitmap
 			for (int j = 7; j >= 0; j --){
 				// int resultado = i * 8 + (7 - j);
 				if (!((actual_bitmap -> bits[i] & ( 1 << j )) >> j)){ 
-					printf("0");
+					
 				}
 				else{
-					printf("1");
+					unos += 1;
 				}
 			}
 		}
 		actual_bitmap = actual_bitmap -> next_bitmap;
-		break;
+		// break;
 	}
+	printf("unos: %d\n", unos);
 	printf("\n");
 }
 
@@ -1144,6 +1146,7 @@ int cz_rm(char* filename){
 					// czFILE* file = setear_estructuras(filename, 0);
 					// printf("FILENAME encontrado en bloque directorio \nCambiando su validez a 0\n");
 					*directorio_actual -> valido = 0x00;		//se saca archivo de directorio
+					actualizar_directorio(posicion_directorio, directorio_actual);
 					// printf("validez cambiada a 0\n");
 					// printf("Revisando su indice: %d \n", byte_a_decimal(directorio_actual -> indice, 4));
 					// printf("El indice en la estructura es: %d \n", bindice -> num_bloque); 
@@ -1192,11 +1195,11 @@ int cz_rm(char* filename){
 			posicion_directorio += 1;
 		}
 	}
-	else{
-		// printf("No se hacen cambios \n");
-		actualizar_disco();
-		return 0;
-	}
+	// else{
+	// 	// printf("No se hacen cambios \n");
+	// 	actualizar_disco();
+	// 	return 0;
+	// }
 	return 1;   			//TODO revisar
 }
 

@@ -34,37 +34,56 @@ int main(int argc, char *argv[])
 		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
 
 	// char orig[11 + 1] = "texto.txt";
-	char dest[11 + 1] = "holaa.txt";
-	// orig[11] = '\0';
-	// dest[11] = '\0';
-	// cz_cp(orig, dest);
+	// char dest[11 + 1] = "holaa.txt";
+	// // orig[11] = '\0';
+	// // dest[11] = '\0';
+	// // cz_cp(orig, dest);
 	// cz_ls();
+	cz_ls();
 
-	// cz_ls();
-	// // printf("existe: %d\n", cz_exists("texto.txs"));
-	// char or[11 + 1] = "holaa.txt";
-	// // // // char dest[11 + 1] = "newcam2.txt";
-	czFILE* file = cz_open(dest, 'w');
+	cz_rm("aaaaa.gif");
+	cz_ls();
 
-	unsigned char buf[2];
-	buf[0] = 'e';
-	buf[1] = '\0';
-	cz_write(file, buf, 1);
-
-	unsigned char bu[3];
-	bu[0] = 'c';
-	bu[1] = 'o';
-	bu[2] = '\0';
-	// bu[3] = '\0';
-
-	// sleep(5);
-
-	cz_write(file, bu, 2);
-
-	printf("creacion %d\n", obtener_tamano(file -> indice -> creacion));
-	printf("modificacion %d\n", obtener_tamano(file -> indice -> modificacion));
 	// // cz_ls();
-	cz_close(file);
+	// // // printf("existe: %d\n", cz_exists("texto.txs"));
+	// // char or[11 + 1] = "holaa.txt";
+	// // // // // char dest[11 + 1] = "newcam2.txt";
+	// imprimir_bitmaps2();
+	// czFILE* file = cz_open(dest, 'w');
+
+	// unsigned char buf[2];
+	// buf[0] = 'e';
+	// buf[1] = '\0';
+	// cz_write(file, buf, 1);
+
+	// unsigned char bu[3];
+	// // bu = "co";
+	// bu[0] = 'c';
+	// bu[1] = 'o';
+	// bu[2] = '\0';
+	// // bu[3] = '\0';
+
+	// // sleep(5);
+
+	// cz_write(file, bu, 2);
+
+	// // printf("creacion %d\n", obtener_tamano(file -> indice -> creacion));
+	// // printf("modificacion %d\n", obtener_tamano(file -> indice -> modificacion));
+	// // // cz_ls();
+	// cz_close(file);
+
+	// imprimir_bitmaps2();
+	// cz_ls();
+	// cz_cp("holaa.txt", "chao.txt");
+	// imprimir_bitmaps2();
+	// cz_ls();
+	// imprimir_bitmaps2();
+
+	// cz_ls();
+	// cz_rm("holaa.txt");
+	// 	imprimir_bitmaps2();
+
+	// cz_ls();
 	// // liberar_resto();
 
 	// czFILE* file_1 = cz_open(or, 'r');		//TODO problemas aqui
