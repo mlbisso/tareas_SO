@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
 		// printf("bytes_a_usar_en_bloque_actual: %d\n", bytes_a_usar_en_bloque_actual);
 	cz_ls();
 	// printf("existe: %d\n", cz_exists("texto.txs"));
-	char or[11 + 1] = "texti.txt";
-	// // char dest[11 + 1] = "newcam2.txt";
+	char or[11 + 1] = "punto.txt";
+	// // // char dest[11 + 1] = "newcam2.txt";
 	czFILE* file = cz_open(or, 'w');
 
 	unsigned char buf[2];
@@ -39,22 +39,36 @@ int main(int argc, char *argv[])
 	buf[1] = '\0';
 	cz_write(file, buf, 1);
 
+	unsigned char bu[3];
+	bu[0] = 'c';
+	bu[1] = 'o';
+	bu[2] = '\0';
+	// bu[3] = '\0';
+
+	cz_write(file, bu, 2);
+
 	// cz_ls();
 	cz_close(file);
+	// liberar_resto();
 
 	czFILE* file_1 = cz_open(or, 'r');		//TODO problemas aqui
+	cz_ls();
 
 	// printf("human\n");
 
 
 	unsigned char buff[2];
 	cz_read(file_1, buff, 1);
+	cz_ls();
+
 	buff[1] = '\0';
 	printf("buff %s\n", buff);
 	cz_close(file_1);
+	cz_ls();
 
 	liberar_resto();					//TODO tambien esta malo
-
+	// printf("no me digas\n");
+	// cz_ls();
 
 	// printf("%s\n", buf);
 	// // ]buf[1] = '\0';

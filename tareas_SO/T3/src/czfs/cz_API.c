@@ -53,8 +53,8 @@ czFILE* czfile_init(char* filename, int mode){
 void cz_mount(char* diskfileName){
 	bdirectorio = bdirectorio_init();
 	bitmaps = bitmaps_init();	
-	bindice = bindice_init();
-	bindirecto = bindirecto_init();
+	// bindice = bindice_init();
+	// bindirecto = bindirecto_init();
 	filename_disco = diskfileName;
 	FILE *fp;
    	// char buffer[1024];
@@ -199,6 +199,8 @@ void bitmap_insert(Bitmaps* bitymaps, Bitmap* new){
 
 czFILE* cz_open(char* filename, char mode){
 	// if (strcmp(mode, 'r') == 0){				//si modo es lectura
+	bindice = bindice_init();
+	bindirecto = bindirecto_init();
 	if (mode == 'r'){					//mode 'r'
 		if (cz_exists(filename) == 0){	//si no existe el nombre
 			return NULL;
@@ -773,7 +775,8 @@ int cz_close(czFILE* file_desc){
 	free(file_desc);
 	bindice = bindice_init();
 	actualizar_disco();
-	// free(bindirecto);
+	free(bindirecto);
+	free(bindice);
 	// bindirecto = bindirecto_init();
 	return 0;
 }
@@ -811,7 +814,8 @@ void cerrar_bloque_indirecto(BIndirecto* indirecto, FILE* fp){
 			cerrar_bloque_datos(indirecto -> datos[i], fp);
 		}	
 	}
-	free(indirecto);
+	// free(indirecto);
+	// 
 	// actualizar_disco();
 }
 
@@ -1161,6 +1165,7 @@ int cz_rm(char* filename){
 	// }
 
 void cz_ls(){
+	// printf("y?\n");
 	Directorio* directorio_actual = bdirectorio -> head;
 	while (directorio_actual != NULL){
 		unsigned char nulo;
@@ -1241,6 +1246,9 @@ void actualizar_bitmap(Bitmap* bitmap){
 }
 
 void liberar_resto(){
+	// if (bindirecto == NULL){
+	// 	printf("ES nULO\n");
+	// }
 	Bitmap* actual_bitmap = bitmaps -> head;
 	while (actual_bitmap != NULL){
 		Bitmap* bitmap_a_borrar = actual_bitmap;
@@ -1248,15 +1256,17 @@ void liberar_resto(){
 		free(bitmap_a_borrar);
 	}
 	free(bitmaps);
-
 	Directorio* directorio_actual = bdirectorio -> head;
 	while (directorio_actual != NULL){
 		Directorio* directorio_a_borrar = directorio_actual;
 		directorio_actual = directorio_actual -> next_directorio;
 		free(directorio_a_borrar);
 	}
+
 	free(bdirectorio);	
-	free(bindice);						//TODO revisar
+	// 	printf("5\n");
+	// cz_ls();
+	// free(bindice);						//TODO revisar
 	// free(bindirecto);
 }
 
