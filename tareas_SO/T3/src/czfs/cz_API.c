@@ -462,7 +462,7 @@ int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 	}
 	int bytes_escritos = 0;
 	int tamano = obtener_tamano(file_desc -> indice -> tamano);
-	while (nbytes != 0 || tamano == 520192){					// 508 * 1024
+	while (nbytes != 0 || tamano != 520192){					// 508 * 1024
 		tamano = obtener_tamano(file_desc -> indice -> tamano);
 		int posicion_bloque_datos = (int)(tamano/1024);  		//donde quiero escribir
 		int resto = tamano - posicion_bloque_datos * 1024;		
@@ -527,6 +527,9 @@ int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 	}
 	int nuevo_tiempo = (unsigned)time(NULL);				//cambio tiempo modificacion
 	actualizar_tiempo(file_desc -> indice -> modificacion, nuevo_tiempo);
+	if (tamano == 520192){
+		fprintf(stderr, "el archivo es muy grande. Se guardo el maximo posible: 508 KB\n");	
+	}
 	return bytes_escritos;
 }
 
