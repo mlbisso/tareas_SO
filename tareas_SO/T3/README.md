@@ -1,13 +1,20 @@
-# T1-SO
+# T3-SO
 
 #Alumnos
 Luis Ampuero
-Mauro Bisso
+Mauro Bisso    14209519
 
 #Decisiones de diseño
-Se crearon tres archivos: funcs.h corresponde al header, que contiene las declaraciones de structs y funciones utilizadas; funcs.c, contiene las funciones que se usaron; y main.c contiene el programa principal. Las colas se crearon con listas ligadas; y los procesos son estructuras que contienen sus datos, las conexiones entre procesos para las colas y la información requerida como output. Además de estas estructuras, se tiene un Burst (una ráfaga), que se coloca en la lista ligada de Bursts de cada proceso.
+Se crearon tres archivos: cz_API.h corresponde al header, que contiene las declaraciones de structs y funciones utilizadas; cz_API.c, contiene las funciones que se usaron (la api); y main.c es el programa de prueba. 
 
-Se creó una cola new, que se completa al momento de leer el archivo de input. Contiene todos los procesos,los que todavía no están en estado ready. También se tiene una cola finished, que es donde llegan a parar los procesos que completan todas sus ráfagas. Por último, se tiene un conjunto de colas ready. El scheduler se encarga de recorrer estas últimas colas (desde mayor a menor prioridad); y cuando encuentra que una cola tiene un proceso en el head, toma este proceso y lo lleva a estado running (porque es el proceso con mayor prioridad, el programa creado los ordena para que se dé esta situación).
+Se crearon strucst para un czFILE, que tiene el nombre del archivo, el modo (si es escritura o lectura), y un puntero al bloque indice que le corresponde. Además, se crearon structs para todos los tipos de bloques, los que están especificados en cz_API.h. De lo anterior es importante destacar que el bloque de directorio (BDirectorio) es una lista ligada de direcciones (Directorio), y que Bitmaps es una lista ligada de Bitmap.
+
+IMPORTANTE: en main.c, antes de probar la API se debe colocar cz_mount(argv[1]). Esto permite que se lea el archivo binario y se monte el disco. Además, es importante que al final de main.c se coloque la función liberar_resto(). Esto permite que se libere la memoria que no se liberó con cz_close() para el bonus. Es decir, esto libera los bitmaps y las direcciones
+
+Variables globales
+
+El tiempo de creación se guarda cuando se hace cz_open en modo escritura a un archivo que no existe.
+
 
 #Supuestos
 Si un proceso está ejecutando en una cola que no tiene la mayor prioridad, y en ese instante llega otro proceso, se atiende a este último, pues tiene mayor prioridad.

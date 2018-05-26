@@ -40,17 +40,20 @@ int main(int argc, char *argv[])
 	// // cz_cp(orig, dest);
 	// cz_ls();
 	cz_ls();
-	printf("%d\n", cz_exists("real.txt"));
-	printf("%d\n", cz_exists("teeee.txt"));
-	cz_ls();
-	// czFILE* file = cz_open("real.txt", 'r');
+	// printf("%d\n", cz_exists("real.txt"));
+	// printf("%d\n", cz_exists("teeee.txt"));
+	// cz_ls();
+	czFILE* file = cz_open("real.txt", 'r');
 
-	// int tamano = obtener_tamano(file -> indice -> tamano);
-	// unsigned char textos[tamano + 1];
-	// int leidos = cz_read(file, textos, tamano);
-	// textos[tamano] = '\0';
-	// printf("texto: %s\n", textos);
-	// cz_close(file);
+	int tamano = obtener_tamano(file -> indice -> tamano);
+	unsigned char textos[tamano + 10 + 1];
+	int leidos = cz_read(file, textos, tamano + 10);
+	printf("leidos %d\n", leidos);
+		printf("tamano %d\n", tamano);
+
+	textos[tamano + 10] = '\0';
+	printf("texto: %s\n", textos);
+	cz_close(file);
 
 	// file = cz_open("texto.txt", 'r');
 

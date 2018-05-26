@@ -184,6 +184,7 @@ czFILE* cz_open(char* filename, char mode){
 				agregar_direccion(archivo);
 				int nuevo_tiempo = (unsigned)time(NULL);
 				actualizar_tiempo(archivo -> indice -> creacion, nuevo_tiempo);		//modificar tiempo creacion
+				actualizar_tiempo(archivo -> indice -> modificacion, nuevo_tiempo);
 				return archivo;
 			}
 			else{
