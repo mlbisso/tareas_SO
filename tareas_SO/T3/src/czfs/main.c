@@ -17,7 +17,50 @@ int main(int argc, char *argv[])
 
 	cz_mount(argv[1]);
 
-	// char * texto = "habia una vez, ........";
+	printf("Estos son los archivos que existen en el directorio principal:\n");
+	cz_ls();
+	printf("Vamos a crear un archivo nuevo llamado percebe.txt y a escribir el título en él\n"); 
+
+	char * titulo = "El percebe feo, por Patricio Estrella.";
+
+	czFILE* file;
+	file = cz_open("percebe.txt", 'w');
+	cz_write(file, titulo, 38);
+	cz_close(file);
+
+	printf("Verifiquemos que creamos un nuevo archivo y que escribimos texto en él\n");
+	printf("Estos son los archivos que existen en el directorio principal:\n");
+	cz_ls();
+	printf("\n");
+
+	file = cz_open("percebe.txt", 'r');
+	unsigned char parte_1[39];
+	cz_read(file, parte_1, 38);
+	parte_1[38] = '\0';
+
+	printf("Esto es lo que contiene %s: %s\n", file->filename, parte_1);
+	cz_close(file);
+
+	printf("Vamos a escribir el contenido dos veces, en otro archivo, con un final diferente\n");
+	char * texto  = "Hubo una vez un percebe feo, era tan feo que todos se murieron";
+	char * final  = "rieron. Fin";
+
+	file = cz_open("patrici.txt", 'w');
+	cz_write(file, texto, 54);
+
+	cz_write(file, final, 11);
+	cz_close(file);
+	printf("Y si lo leemos:\n");
+
+	file = cz_open("patrici.txt", 'r');
+	unsigned char parte_2[66];
+	cz_read(file, parte_2, 65);
+	parte_2[65] = '\0';
+	printf("Esto es lo que contiene %s: %s\n", file->filename, parte_2);
+	cz_close(file);
+
+
+	liberar_resto();
 
 
 	// printf("%d\n", cz_exists("aaaaaa.txt"));
@@ -40,21 +83,21 @@ int main(int argc, char *argv[])
 	// // dest[11] = '\0';
 	// // cz_cp(orig, dest);
 	// cz_ls();
-	cz_ls();
-	// printf("%d\n", cz_exists("real.txt"));
-	// printf("%d\n", cz_exists("teeee.txt"));
 	// cz_ls();
-	czFILE* file = cz_open("real.txt", 'r');
+	// // printf("%d\n", cz_exists("real.txt"));
+	// // printf("%d\n", cz_exists("teeee.txt"));
+	// // cz_ls();
+	// czFILE* file = cz_open("real.txt", 'r');
 
-	int tamano = obtener_tamano(file -> indice -> tamano);
-	unsigned char textos[tamano + 10 + 1];
-	int leidos = cz_read(file, textos, tamano + 10);
-	printf("leidos %d\n", leidos);
-		printf("tamano %d\n", tamano);
+	// int tamano = obtener_tamano(file -> indice -> tamano);
+	// unsigned char textos[tamano + 10 + 1];
+	// int leidos = cz_read(file, textos, tamano + 10);
+	// printf("leidos %d\n", leidos);
+	// 	printf("tamano %d\n", tamano);
 
-	textos[tamano + 10] = '\0';
-	printf("texto: %s\n", textos);
-	cz_close(file);
+	// textos[tamano + 10] = '\0';
+	// printf("texto: %s\n", textos);
+	// cz_close(file);
 
 	// file = cz_open("texto.txt", 'r');
 
@@ -131,7 +174,6 @@ int main(int argc, char *argv[])
 	// cz_close(file_1);
 	// cz_ls();
 
-	liberar_resto();					//TODO tambien esta malo
 	// printf("no me digas\n");
 	// cz_ls();
 
