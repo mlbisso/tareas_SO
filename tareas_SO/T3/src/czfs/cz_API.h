@@ -6,11 +6,6 @@
 /*                                Tipos                                     */
 /****************************************************************************/
 
-// typedef struct czFILE {
-//   char filename[11 + 1];
-//   char  
-// } czFILE;
-
 struct bdatos;
 typedef struct bdatos BDatos;
 
@@ -56,7 +51,6 @@ typedef struct bitmap Bitmap;
 
 struct bitmap
 {
-  // char bits[1024 + 1];
   unsigned char bits[1024 + 1];              //2^10 * 2^13
   Bitmap* next_bitmap;
   unsigned int num_bloque;
@@ -124,9 +118,6 @@ czFILE* czfile_init(char* filename, int mode);
 int buscar_espacio_en_bitmap();
 void actualizar_directorio(int posicion_directorio, Directorio* directorio);
 void actualizar_bitmap(Bitmap* bitmap);
-void actualizar_indice(BIndice* bindice);
-void actualizar_indirecto(BIndirecto* bindirecto);
-void actualizar_datos(BDatos* bdatos);
 
 void setear_bindice(int indice);
 void setear_bindirecto(int indice);      

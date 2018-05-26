@@ -40,9 +40,30 @@ int main(int argc, char *argv[])
 	// // cz_cp(orig, dest);
 	// cz_ls();
 	cz_ls();
-
-	cz_rm("aaaaa.gif");
+	printf("%d\n", cz_exists("real.txt"));
+	printf("%d\n", cz_exists("teeee.txt"));
 	cz_ls();
+	// czFILE* file = cz_open("real.txt", 'r');
+
+	// int tamano = obtener_tamano(file -> indice -> tamano);
+	// unsigned char textos[tamano + 1];
+	// int leidos = cz_read(file, textos, tamano);
+	// textos[tamano] = '\0';
+	// printf("texto: %s\n", textos);
+	// cz_close(file);
+
+	// file = cz_open("texto.txt", 'r');
+
+	// int tamanos = obtener_tamano(file -> indice -> tamano);
+	// unsigned char texto[tamanos + 1];
+	// cz_read(file, texto, tamanos);
+	// texto[tamanos] = '\0';
+	// printf("texto: %s\n", texto);
+	// cz_cp("real.txt", "texto.txt");
+	// printf("\n");
+	// cz_ls();
+
+
 
 	// // cz_ls();
 	// // // printf("existe: %d\n", cz_exists("texto.txs"));
