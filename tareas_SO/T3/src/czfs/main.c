@@ -17,48 +17,123 @@ int main(int argc, char *argv[])
 
 	cz_mount(argv[1]);
 
-	printf("Estos son los archivos que existen en el directorio principal:\n");
+	printf("(cz_ls) Estos son los archivos que existen en el directorio principal:\n");
 	cz_ls();
-	printf("Vamos a crear un archivo nuevo llamado percebe.txt y a escribir el título en él\n"); 
+	printf("Vamos a crear un archivo nuevo llamado percebe.txt y a escribir el título 'El percebe feo, por Patricio Estrella.' en él\n"); 
 
 	char * titulo = "El percebe feo, por Patricio Estrella.";
 
 	czFILE* file;
+	printf("(cz_open) filename='percebe.txt', mode='w'\n");
 	file = cz_open("percebe.txt", 'w');
+	printf("(cz_write) file_desc='return de cz_open', buffer='El percebe feo, por Patricio Estrella.', nbytes='38'\n");
 	cz_write(file, titulo, 38);
+	printf("(cz_close) aplicamos los cambios al archivo binario\n");
 	cz_close(file);
 
 	printf("Verifiquemos que creamos un nuevo archivo y que escribimos texto en él\n");
-	printf("Estos son los archivos que existen en el directorio principal:\n");
+	printf("(cz_ls) Estos son los archivos que existen en el directorio principal:\n");
 	cz_ls();
 	printf("\n");
-
+	printf("Abrimos percebe.txt en modo lectura\n");
+	printf("(cz_open) filename='percebe.txt', mode='r'\n");
 	file = cz_open("percebe.txt", 'r');
 	unsigned char parte_1[39];
+	printf("(cz_read) file_desc='return de cz_open', buffer='vacio de 39 bytes', nbytes='38'\n");
 	cz_read(file, parte_1, 38);
 	parte_1[38] = '\0';
-
 	printf("Esto es lo que contiene %s: %s\n", file->filename, parte_1);
 	cz_close(file);
 
-	printf("Vamos a escribir el contenido dos veces, en otro archivo, con un final diferente\n");
+	printf("Abrimos texto.txt en modo lectura para leer todo su contenido\n");
+	printf("(cz_open) filename='texto.txt', mode='r'\n");
+	file = cz_open("texto.txt", 'r');
+	int tam = obtener_tamano(file -> indice -> tamano)+1;
+	unsigned char tex[tam];
+	printf("(cz_read) file_desc='return de cz_open', buffer='vacio con %d bytes', nbytes='%d'\n", tam, tam-1);
+	cz_read(file, tex, tam-1);
+	tex[tam-1] = '\0';
+	printf("Esto es lo que contiene %s: %s\n", file->filename, tex);
+	cz_close(file);
+
+	printf("Ahora abrimos texto.txt en modo lectura para leer su contenido, pero en 2 partes\n");
+	printf("(cz_open) filename='texto.txt', mode='r'\n");
+	file = cz_open("texto.txt", 'r');
+	tam =  obtener_tamano(file -> indice -> tamano) + 1;
+	unsigned char tex2[(int)(tam/2)];
+	printf("(cz_read) file_desc='return de cz_open', buffer='vacio con %d bytes', nbytes='%d'\n", (int)(tam/2), (int)(tam/2)-1);
+	cz_read(file, tex2, (int)(tam/2)-1);
+	tex2[(int)(tam/2)-1] = '\0';
+	printf("Esto es lo que contiene la primera parte de %s: %s\nAhora continuamos leyendo el mismo file\n", file->filename, tex2);
+	unsigned char tex3[(int)(tam/2)+2];
+	printf("(cz_read) file_desc='return de cz_open', buffer='vacio con %d bytes', nbytes='%d'\n", (int)(tam/2)+2, (int)(tam/2)+1);
+	cz_read(file, tex3, (int)(tam/2)+2);
+	tex3[(int)(tam/2)] = '\0';
+	printf("Esto es lo que contiene la segunda parte de %s: %s\n", file->filename, tex3);
+	cz_close(file);
+
+	printf("\nVamos a escribir contenido dos veces, en otro archivo llamado patrici.txt, con un final diferente\n");
 	char * texto  = "Hubo una vez un percebe feo, era tan feo que todos se murieron";
 	char * final  = "rieron. Fin";
 
+	printf("(cz_open) filename='patrici.txt', mode='w'\n");
 	file = cz_open("patrici.txt", 'w');
+	printf("(cz_write) file_desc='return de cz_open', buffer='Hubo una vez un percebe feo, era tan feo que todos se murieron', nbytes='54'\nNotar que el número de bytes entregado(54) es menor al número de bytes que ocupa el buffer(62) por lo que se escribirá solo 'Hubo una vez un percebe feo, era tan feo que todos se '\n");
 	cz_write(file, texto, 54);
-
+	printf("(cz_write) file_desc='return de cz_open', buffer='rieron. Fin', nbytes='11'\nNotar que la cantidad de bytes(11) coincide con el número de bytes que ocupa el buffer(11) y el contenido se agrega a continuación del anterior\n");
 	cz_write(file, final, 11);
 	cz_close(file);
 	printf("Y si lo leemos:\n");
 
+	printf("(cz_open) filename='patrici.txt', mode='r'\n");
 	file = cz_open("patrici.txt", 'r');
 	unsigned char parte_2[66];
+	printf("(cz_read) file_desc='return de cz_open', buffer='vacio con 66 bytes', nbytes='65' (los 65 bytes que acabamos de escribir 54 + 11)\n");
 	cz_read(file, parte_2, 65);
 	parte_2[65] = '\0';
 	printf("Esto es lo que contiene %s: %s\n", file->filename, parte_2);
 	cz_close(file);
 
+	printf("(cz_ls) Los archivos en el directorio principal son: \n");
+	cz_ls();
+
+	printf("\n(cz_exists) Verifiquemos si existe el filename='perecebe.txt'\n");
+	if (cz_exists("percebe.txt")){
+		printf("El archivo percebe.txt existe\n");
+	}
+	printf("(cz_exists) Verifiquemos si existe el filename='pereba.txt'\n");	
+	if (!cz_exists("pereba.png")){
+		printf("El archivo pereba.png no existe\n");
+	}
+
+	printf("\nCambiemos el nombre del archivo percebe.txt por bobespo.txt\n");
+	char or[] = "percebe.txt";
+	char dest[] = "bobespo.txt";
+	printf("(cz_mv) orig='percebe.txt', dest='bobespo.txt'\n");
+	cz_mv(or, dest);
+	printf("(cz_ls) Verificamos el cambio de nombre en el directorio principal:\n");
+	cz_ls();
+
+	printf("\nCopiemos el archivo bobespo.txt en un nuevo archivo piña.txt\n");
+	char destin[] = "piña.txt";
+	printf("(cz_cp) orig='bobespo.txt', dest='piña.txt'\n");
+	cz_cp(dest, destin);
+	printf("(cz_ls) Verifiquemos que se creo el nuevo archivo en el directorio principal:\n");
+	cz_ls();
+	printf("Ahora verifiquemos que el contenido del nuevo archivo coincida con el del original\n");
+	file = cz_open(dest, 'r');
+	cz_read(file, parte_1, 38);
+	printf("Esto es lo que contiene %s: %s\n", file->filename, parte_1);
+	cz_close(file);
+	file = cz_open(destin, 'r');
+	cz_read(file, parte_1, 38);
+	printf("Esto es lo que contiene %s: %s\n", file->filename, parte_1);
+	cz_close(file);
+
+	printf("\n(cz_rm) Finalmente borremos la copia que acabamos de crear filename='%s'\n", destin);
+	cz_rm(destin);
+	printf("(cz_ls) Comprobemos que fue eliminado del directorio principal:\n");
+	cz_ls();
 
 	liberar_resto();
 
