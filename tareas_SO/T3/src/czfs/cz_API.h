@@ -158,3 +158,4 @@ void printear_dir();
 
 int obtener_datos(BDatos* datos, void* buffer, int nbytes, int leidos, int voy_a_leer, int inicio_bloque);
 void actualizar_disco();
+void actualizar_tiempo(unsigned char* buff, int nuevo_tiempo);

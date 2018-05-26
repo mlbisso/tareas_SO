@@ -11,6 +11,9 @@
 
 #include <stdbool.h>
 
+#include <time.h>
+
+
 
 BDirectorio * bdirectorio;
 // bdirectorio = bdirectorio_init();
@@ -220,6 +223,8 @@ czFILE* cz_open(char* filename, char mode){
 				setear_bindice(indice);		//hago que el bloque indice esté vacío
 				czFILE * archivo = czfile_init(filename, 1);
 				agregar_direccion(archivo);
+				int nuevo_tiempo = (unsigned)time(NULL);
+				actualizar_tiempo(archivo -> indice -> creacion, nuevo_tiempo);		//modificar tiempo creacion
 				return archivo;
 			}
 			else{
@@ -523,7 +528,6 @@ int cz_read(czFILE* file_desc, void* buffer, int nbytes){
 }
 
 int cz_write(czFILE* file_desc, void* buffer, int nbytes){
-	//TODO cambiar timestamps
 	if (file_desc -> mode == 0){		//si es modo read y quieres escribir
 		return -1;
 	}
@@ -604,6 +608,8 @@ int cz_write(czFILE* file_desc, void* buffer, int nbytes){
 		tamano = obtener_tamano(file_desc -> indice -> tamano);
 				// printf("nbytes: %d\n", nbytes);
 	}
+	int nuevo_tiempo = (unsigned)time(NULL);				//cambio tiempo modificacion
+	actualizar_tiempo(file_desc -> indice -> modificacion, nuevo_tiempo);
 	// for (int i = 0; i < 252; i ++){
 	// 	if (file_desc -> indice -> datos[i] == NULL){
 
@@ -624,6 +630,23 @@ void actualizar_tamano(czFILE* file_desc, int j){
 	file_desc -> indice -> tamano[1] = (tamano >> 16) & 0xFF;
 	file_desc -> indice -> tamano[2] = (tamano >> 8) & 0xFF;
 	file_desc -> indice -> tamano[3] = tamano & 0xFF;
+	// int* intArray = malloc(sizeof(int[4]));
+
+	// for (int i=0; i<4; i++){
+	//    intArray[i] = file_desc -> indice -> tamano[i];
+	// }
+	// printf("tamano %d\n", *intArray);
+}
+
+void actualizar_tiempo(unsigned char* buff, int nuevo_tiempo){
+	// unsigned char bytes[4];
+
+	// int tamano = obtener_tamano(file_desc -> indice -> tamano);
+	// tamano += j;
+	buff[0] = (nuevo_tiempo >> 24) & 0xFF;
+	buff[1] = (nuevo_tiempo >> 16) & 0xFF;
+	buff[2] = (nuevo_tiempo >> 8) & 0xFF;
+	buff[3] = nuevo_tiempo & 0xFF;
 	// int* intArray = malloc(sizeof(int[4]));
 
 	// for (int i=0; i<4; i++){
