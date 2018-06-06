@@ -6,6 +6,7 @@
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
 #include <stdlib.h>
+#include <unistd.h>
 
  
 int main(int argc , char *argv[])
@@ -58,6 +59,7 @@ int main(int argc , char *argv[])
         }
        	if (server_reply[0] == 0x02){
        		printf("Connection established\n");
+            sleep(0.01);
        	}
 
 
@@ -65,8 +67,16 @@ int main(int argc , char *argv[])
             puts("recv failed");
         }
        	if (server_reply[0] == 0x03){
+            char nombre[2000];
        		printf("Enter nickname: ");
-        	scanf("%s" , message);				//TODO malo pasarlo a binario
+        	scanf("%s" , nombre);				//TODO malo pasarlo a binario
+            printf("largo %zu\n", strlen(nombre));
+            int n = strlen(nombre);
+            char* payload_size = (char*)&n;
+            message[0] = 0x04;      //return nickname
+            message[1] = *payload_size;
+            memcpy(message + 2, nombre, strlen(nombre));
+            // message
         	if(send(sock , message , strlen(message) , 0) < 0)
 	        {
 	            puts("Send failed");
