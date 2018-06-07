@@ -10,53 +10,6 @@
 void *connection_handler(void *);
 
 int jugadores = 0;
- 
-int byte_a_decimal(char tamano, int nbytes){
-    unsigned char *ptr = tamano;
-    unsigned char bits[nbytes * 8 + 1];
-    int numero;
-    int posicion_actual = nbytes * 8 - 1;
-    int asignaciones = 0;
-    for (int i = nbytes - 1; i >= 0; i--){
-        numero = ptr[i];
-        while (numero != 0){
-            if (numero % 2 == 0){    //es par
-                bits[posicion_actual] = '0';
-            }
-            if (numero % 2 == 1){
-                bits[posicion_actual] = '1';
-            }
-            asignaciones += 1;
-            numero = (int)(numero / 2);
-            posicion_actual -= 1;
-        }
-        while (asignaciones != 8){
-            bits[posicion_actual] = '0';
-            posicion_actual -= 1;
-            asignaciones += 1;
-        }
-        asignaciones = 0;
-    }
-    bits[nbytes * 8] = '\0';
-    int resultado = 0;
-    for (int i = 0; i < 32; i++){
-        if (bits[i] == 48){   //es cero
-            if (resultado == 0){
-                continue;
-            }
-            resultado = resultado * 2;
-        }
-        if (bits[i] == 49){    // es uno
-            if (resultado == 0){
-                resultado = 1;
-                continue;
-            }
-            resultado = resultado * 2 + 1;
-        }
-    }
-    return resultado;
-}
-
 
 int main(int argc , char *argv[]){
 
@@ -73,9 +26,7 @@ int main(int argc , char *argv[]){
 
     int socket_desc , client_sock , c , *new_sock;
     struct sockaddr_in server , client;
-    char message[1000] , client_reply[2000];
-    int sock;
-    sock = socket(AF_INET , SOCK_STREAM , 0);
+    //char message[1000] , client_reply[2000];
 
      
     //Create socket
@@ -107,10 +58,6 @@ int main(int argc , char *argv[]){
     puts("Waiting for incoming connections...");
     c = sizeof(struct sockaddr_in);
      
-     
-    //Accept and incoming connection
-    puts("Waiting for incoming connections...");
-    c = sizeof(struct sockaddr_in);
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
         puts("Connection accepted");
@@ -147,34 +94,10 @@ void *connection_handler(void *socket_desc)
     int num_jugador;
     int sock = *(int*)socket_desc;
     int read_size;
-    char *message , client_message[2000];
-    
-    if(recv(sock, client_message, 2000, 0) < 0){
-        puts("recv failed");
-    } 
-    printf("lo que recibi\n");
-    if (client_message[0] == 0x01){
-    	jugadores += 1;
-    	num_jugador = jugadores;
-    	printf("Start connection client %d\n", num_jugador);
-		client_message[0] = 0x02;			//para connection established
-		client_message[1] = 0x00;
-		client_message[2] = 0x00;
-		client_message[3] = '\0';
+    char message[2000];
+    char client_message[2000];
+    int largo_nombre;
 
-	    if(send(sock , client_message , 4 , 0) < 0){
-	        puts("Send failed");
-	    }
-
-	   	client_message[0] = 0x03;			//ask_nickname
-		client_message[1] = 0x00;
-		client_message[2] = 0x00;
-		client_message[3] = '\0';
-
-	    if(send(sock , client_message , 4 , 0) < 0){
-	        puts("Send failed");
-	    }
-    }
     //Send some messages to the client
     // message = "Greetings! I am your connection handler\n";
     // write(sock , message , strlen(message));
@@ -187,35 +110,39 @@ void *connection_handler(void *socket_desc)
     {  	
         //Send the message back to client
             // write(sock , client_message , strlen(client_message));
-        if (client_message[0] == 0x04){
-            int largo_nombre = (int)client_message[1];
-            printf("largo en servidor %d\n", largo_nombre);
-            char nombre[largo_nombre + 1];
-            strncpy(nombre, client_message + 2, largo_nombre);
-            nombre[largo_nombre] = '\0';
-            printf("El nombre del jugador %d es : %s\n", jugadores, nombre);
-            jugadores += 1;
-            num_jugador = jugadores;
-            // // printf("Start connection client %d\n", num_jugador);
-            // client_message[0] = 0x02;           //para connection established
-            // client_message[1] = 0x00;
-            // client_message[2] = 0x00;
-            // client_message[3] = '\0';
-
-            // if(send(sock , client_message , 4 , 0) < 0){
-            //     puts("Send failed");
-            // }
-
-            // client_message[0] = 0x03;           //ask_nickname
-            // client_message[1] = 0x00;
-            // client_message[2] = 0x00;
-            // client_message[3] = '\0';
-
-            // if(send(sock , client_message , 4 , 0) < 0){
-            //     puts("Send failed");
-            // }
-    }
-
+        largo_nombre = (int)client_message[1];
+        printf("Largo del nombre: %d \n", largo_nombre);
+        char nombre[largo_nombre + 1];
+        switch(client_message[0])
+        {
+            case 0x01:
+                jugadores += 1;
+                num_jugador = jugadores;
+                printf("Start connection client %d\n", num_jugador);
+                message[0] = 0x02;          //para connection established
+                message[1] = 0x00;
+                message[2] = 0x00;
+                message[3] = '\0';
+                if(send(sock , message , 4 , 0) < 0){
+                    puts("Send failed");
+                }
+                message[0] = 0x03;          //ask_nickname
+                message[1] = 0x00;
+                message[2] = 0x00;
+                message[3] = '\0';
+                if(send(sock , message , 4 , 0) < 0){
+                    puts("Send failed");
+                }
+            case 0x04:
+                printf("largo en servidor %d\n", largo_nombre);
+                strncpy(nombre, client_message + 2, largo_nombre);
+                nombre[largo_nombre] = '\0';
+                printf("El nombre del jugador %d es : %s\n", jugadores, nombre);
+                jugadores += 1;
+                num_jugador = jugadores;
+            default:
+                printf("Default en switch client message");
+        }
     }
      
     if(read_size == 0)
