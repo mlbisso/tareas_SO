@@ -50,26 +50,63 @@ int main(int argc , char *argv[])
 		message[2] = 0x00;
 		message[3] = '\0';
 
-	    if(send(sock , message , 4 , 0) < 0){
-	        puts("Send failed");
-	        return 1;
-	    }
-	    if(recv(sock , server_reply, 2000, 0) < 0){
-            puts("recv failed");
-        }
-       	if (server_reply[0] == 0x02){
-       		printf("Connection established\n");
-            sleep(0.01);
+	    // if(send(sock , message , 4 , 0) < 0){
+	    //     puts("Send failed");
+	    //     return 1;
+	    // }
+	    // if(recv(sock , server_reply, 2000, 0) < 0){
+     //        puts("recv failed");
+     //    }
+     //   	if (server_reply[0] == 0x02){
+     //   		printf("Connection established\n");
+     //        sleep(0.01);
+     //   	}
+
+
+	    // if(recv(sock , server_reply, 2000, 0) < 0){
+     //        puts("recv failed");
+     //    }
+     //   	if (server_reply[0] == 0x03){
+     //        char nombre[2000];
+     //   		printf("Enter nickname: ");
+     //    	scanf("%s" , nombre);				//TODO malo pasarlo a binario
+     //        printf("largo %zu\n", strlen(nombre));
+     //        int n = strlen(nombre);
+     //        char* payload_size = (char*)&n;
+     //        message[0] = 0x04;      //return nickname
+     //        message[1] = *payload_size;
+     //        memcpy(message + 2, nombre, strlen(nombre));
+     //        // message
+     //    	if(send(sock , message , strlen(message) , 0) < 0)
+	    //     {
+	    //         puts("Send failed");
+	    //         return 1;
+	    //     }
        	}
-
-
-	    if(recv(sock , server_reply, 2000, 0) < 0){
+         
+    //keep communicating with server
+    while(1)
+    {
+        if(send(sock , message , 4 , 0) < 0){
+            puts("Send failed");
+            return 1;
+        }
+        if(recv(sock , server_reply, 2000, 0) < 0){
             puts("recv failed");
         }
-       	if (server_reply[0] == 0x03){
+        if (server_reply[0] == 0x02){
+            printf("Connection established\n");
+            // sleep(0.01);
+        }
+
+
+        // if(recv(sock , server_reply, 2000, 0) < 0){
+        //     puts("recv failed");
+        // }
+        if (server_reply[0] == 0x03){
             char nombre[2000];
-       		printf("Enter nickname: ");
-        	scanf("%s" , nombre);				//TODO malo pasarlo a binario
+            printf("Enter nickname: ");
+            scanf("%s" , nombre);               //TODO malo pasarlo a binario
             printf("largo %zu\n", strlen(nombre));
             int n = strlen(nombre);
             char* payload_size = (char*)&n;
@@ -77,38 +114,13 @@ int main(int argc , char *argv[])
             message[1] = *payload_size;
             memcpy(message + 2, nombre, strlen(nombre));
             // message
-        	if(send(sock , message , strlen(message) , 0) < 0)
-	        {
-	            puts("Send failed");
-	            return 1;
-	        }
-       	}
+            // if(send(sock , message , strlen(message) , 0) < 0)
+            // {
+            //     puts("Send failed");
+            //     return 1;
+            // }
     }
-         
-    //keep communicating with server
-    while(1)
-    {
-        printf("Enter message : ");
-        scanf("%s" , message);
-         
-        //Send some data
-        if(send(sock , message , strlen(message) , 0) < 0)
-        {
-            puts("Send failed");
-            return 1;
-        }
-         
-        //Receive a reply from the server
-        if(recv(sock , server_reply, 2000, 0) < 0)
-        {
-            puts("recv failed");
-            break;
-        }
-         
-        puts("Server reply :");
-        puts(server_reply);
-    }
-     
+}
     // close(sock);
     return 0;
 }

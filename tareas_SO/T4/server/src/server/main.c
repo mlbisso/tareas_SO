@@ -189,30 +189,31 @@ void *connection_handler(void *socket_desc)
             // write(sock , client_message , strlen(client_message));
         if (client_message[0] == 0x04){
             int largo_nombre = (int)client_message[1];
+            printf("largo en servidor %d\n", largo_nombre);
             char nombre[largo_nombre + 1];
             strncpy(nombre, client_message + 2, largo_nombre);
             nombre[largo_nombre] = '\0';
-            printf("El nombre del jugador es : %s\n", nombre);
+            printf("El nombre del jugador %d es : %s\n", jugadores, nombre);
             jugadores += 1;
             num_jugador = jugadores;
-            printf("Start connection client %d\n", num_jugador);
-            client_message[0] = 0x02;           //para connection established
-            client_message[1] = 0x00;
-            client_message[2] = 0x00;
-            client_message[3] = '\0';
+            // // printf("Start connection client %d\n", num_jugador);
+            // client_message[0] = 0x02;           //para connection established
+            // client_message[1] = 0x00;
+            // client_message[2] = 0x00;
+            // client_message[3] = '\0';
 
-            if(send(sock , client_message , 4 , 0) < 0){
-                puts("Send failed");
-            }
+            // if(send(sock , client_message , 4 , 0) < 0){
+            //     puts("Send failed");
+            // }
 
-            client_message[0] = 0x03;           //ask_nickname
-            client_message[1] = 0x00;
-            client_message[2] = 0x00;
-            client_message[3] = '\0';
+            // client_message[0] = 0x03;           //ask_nickname
+            // client_message[1] = 0x00;
+            // client_message[2] = 0x00;
+            // client_message[3] = '\0';
 
-            if(send(sock , client_message , 4 , 0) < 0){
-                puts("Send failed");
-            }
+            // if(send(sock , client_message , 4 , 0) < 0){
+            //     puts("Send failed");
+            // }
     }
 
     }
