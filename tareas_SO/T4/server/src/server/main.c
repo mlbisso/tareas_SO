@@ -10,18 +10,26 @@
 void *connection_handler(void *);
 
 int jugadores = 0;
+int clientes[2];                //Guarda los sockets
+char nombre_j1[2000];
+char nombre_j2[2000];
+// nombre_j1 = ;
+// nombre_j2 = ;
 
 int main(int argc , char *argv[]){
 
-    if ((argc == 5) && (((strcmp("-i", argv[1]) == 0) && strcmp("-p", argv[3]) == 0) || ((strcmp("-p", argv[1]) == 0) && strcmp("-i", argv[3]) == 0)))
-    {  
+    if ((argc == 5) && (((strcmp("-i", argv[1]) == 0) && strcmp("-p", argv[3]) == 0) || ((strcmp("-p", argv[1]) == 0) && strcmp("-i", argv[3]) == 0))){  
     }
+
     else{
         printf("Uso: %s -i <ip_address> -p <tcp-port> \nDonde\n", argv[0]);
         printf("\t <ip_address> es la direccion IP que va a ocupar el servidor para iniciar\n");
         printf("\t <tcp-port> es el puerto TCP donde se establecer´an las conexiones. \n");
         return 1;
     }
+
+    clientes[0] = -1;
+    clientes[1] = -1;
 
     int port;
     char* ip_address;
@@ -69,7 +77,7 @@ int main(int argc , char *argv[]){
     puts("Waiting for incoming connections...");
     c = sizeof(struct sockaddr_in);
      
-    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
+    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)))    // && jugadores < 2)
     {
         puts("Connection accepted");
 
@@ -92,7 +100,12 @@ int main(int argc , char *argv[]){
         perror("accept failed");
         return 1;
     }
-     
+
+    // if (jugadores >= 2){
+    //     jugadores = 2;
+    //     perror("Ya se tienen 2 jugadores\n");
+    //     return 1;
+    // }
     return 0;
 }
  
@@ -109,6 +122,16 @@ void *connection_handler(void *socket_desc)
     char client_message[2000];
     int largo_nombre;
 
+    if (clientes[0] == -1){
+        clientes[0] = sock;
+    }
+    else{
+        clientes[1] = sock;
+    }
+
+    jugadores += 1;
+    num_jugador = jugadores;
+
     //Send some messages to the client
     // message = "Greetings! I am your connection handler\n";
     // write(sock , message , strlen(message));
@@ -117,6 +140,8 @@ void *connection_handler(void *socket_desc)
     // write(sock , message , strlen(message));
      
     //Receive a message from client
+    int n;
+            char* payload_size;
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
     {  	
         //Send the message back to client
@@ -127,8 +152,6 @@ void *connection_handler(void *socket_desc)
         switch(client_message[0])
         {
             case 0x01:
-                jugadores += 1;
-                num_jugador = jugadores;
                 printf("Start connection client %d\n", num_jugador);
                 message[0] = 0x02;          //para connection established
                 message[1] = 0x00;
@@ -150,9 +173,41 @@ void *connection_handler(void *socket_desc)
                 strncpy(nombre, client_message + 2, largo_nombre);
                 // printf("l1: %s", client_message);
                 nombre[largo_nombre] = '\0';
-                printf("El nombre del jugador %d es : %s\n", jugadores, nombre);
-                jugadores += 1;
-                num_jugador = jugadores;
+                printf("El nombre del jugador %d es : %s\n", num_jugador, nombre);
+                if (clientes[0] == sock){
+                    memcpy(nombre_j1, nombre, largo_nombre);
+                    nombre_j1[largo_nombre] = '\0';
+                    // for (int i = 0; i < largo_nombre; i++){
+                    //     strcpy(*nombre_j1, nombre[i]);
+                    //     nombre_j1 ++;
+                    // }
+                }
+                else{
+                    memcpy(nombre_j2, nombre, largo_nombre);
+                    nombre_j2[largo_nombre] = '\0';
+
+                }
+                if (jugadores == 2){
+                    message[0] = 0x05;
+
+                    n = strlen(nombre_j1);
+                    payload_size = (char*)&n;
+                    message[1] = *payload_size;
+                    memcpy(message + 2, nombre_j1, n);
+                    if(send(clientes[1] , message , 2 + n , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    }
+                    // printf("") 
+                    n = strlen(nombre_j2);
+                    payload_size = (char*)&n;
+                    message[1] = *payload_size;
+                    memcpy(message + 2, nombre_j2, n);
+                    if(send(clientes[0] , message , 2 + n , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    }
+                }
                 break;
             default:
                 printf("Default en switch client message");
