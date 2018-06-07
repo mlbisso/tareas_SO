@@ -13,16 +13,27 @@ int jugadores = 0;
 
 int main(int argc , char *argv[]){
 
-	if (argc != 5 || strcmp("-i", argv[1]) != 0 || strcmp("-p", argv[3]) != 0)
-	{
-		printf("Uso: %s -i <ip_address> -p <tcp-port> \nDonde\n", argv[0]);
-		printf("\t <ip_address> es la direccion IP que va a ocupar el servidor para iniciar\n");
-		printf("\t <tcp-port> es el puerto TCP donde se establecer´an las conexiones. \n");
-		return 1;
-	}
+    if ((argc == 5) && (((strcmp("-i", argv[1]) == 0) && strcmp("-p", argv[3]) == 0) || ((strcmp("-p", argv[1]) == 0) && strcmp("-i", argv[3]) == 0)))
+    {  
+    }
+    else{
+        printf("Uso: %s -i <ip_address> -p <tcp-port> \nDonde\n", argv[0]);
+        printf("\t <ip_address> es la direccion IP que va a ocupar el servidor para iniciar\n");
+        printf("\t <tcp-port> es el puerto TCP donde se establecer´an las conexiones. \n");
+        return 1;
+    }
 
-	int port = atoi(argv[4]);
-	char* ip_address = argv[2];
+    int port;
+    char* ip_address;
+    if (strcmp("-i", argv[1]) == 0){
+       port = atoi(argv[4]);
+       ip_address = argv[2];        
+    }
+    else{
+       port = atoi(argv[2]);
+       ip_address = argv[4];        
+    }
+
 
     int socket_desc , client_sock , c , *new_sock;
     struct sockaddr_in server , client;
@@ -111,8 +122,8 @@ void *connection_handler(void *socket_desc)
         //Send the message back to client
             // write(sock , client_message , strlen(client_message));
         largo_nombre = (int)client_message[1];
-        printf("Largo del nombre: %d \n", largo_nombre);
         char nombre[largo_nombre + 1];
+
         switch(client_message[0])
         {
             case 0x01:
@@ -133,13 +144,16 @@ void *connection_handler(void *socket_desc)
                 if(send(sock , message , 4 , 0) < 0){
                     puts("Send failed");
                 }
+                // client_message[0] = 0x00;
+                break;
             case 0x04:
-                printf("largo en servidor %d\n", largo_nombre);
                 strncpy(nombre, client_message + 2, largo_nombre);
+                // printf("l1: %s", client_message);
                 nombre[largo_nombre] = '\0';
                 printf("El nombre del jugador %d es : %s\n", jugadores, nombre);
                 jugadores += 1;
                 num_jugador = jugadores;
+                break;
             default:
                 printf("Default en switch client message");
         }
