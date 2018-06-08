@@ -7,6 +7,7 @@
 #include<arpa/inet.h> //inet_addr
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
 
  
 int main(int argc , char *argv[])
@@ -57,11 +58,15 @@ int main(int argc , char *argv[])
     }
     else{
 
-		message[0] = 0x01;			//para start connection
-		message[1] = 0x00;
-		message[2] = 0x00;
-		message[3] = '\0';
-        if(send(sock , message , 4 , 0) < 0){
+		// message[0] = 0x01;			//para start connection
+		// message[1] = 0x00;
+		// message[2] = 0x00;
+		// message[3] = '\0';
+
+                            memcpy(message, "00000001", 8);
+                    memcpy(message + 8, "00000000", 8);
+                    memcpy(message + 16, "00000000", 8);
+        if(send(sock , message , 3 * 8 , 0) < 0){
             puts("Send failed");
             return 1;
         }
@@ -70,6 +75,7 @@ int main(int argc , char *argv[])
     //keep communicating with server
     char nombre_contricante[2000];
     int largo_nombre_contrincante;
+    uint16_t bet = 0;
     while(1)
     {
         if(recv(sock , server_reply, 2000, 0) < 0){
@@ -79,13 +85,32 @@ int main(int argc , char *argv[])
             char nombre[2000];
             int n;
             char* payload_size;
+            char* name_with_extension;
+            char otherString[8]; // note 6, not 5, there's one there for the null terminator
+            char otherString_2[8]; // note 6, not 5, there's one there for the null terminator
+                    int total = 0;
+                    int i;
+                    char* start;
 
-            switch(server_reply[0])
+            char id[8];
+            memcpy(id, server_reply, 8);
+            id[8] = '\0';
+            char* start_2;
+            start_2 = &id[0];
+            int total_2;
+            while (*start_2)
             {
-                case 0x02:
+                total_2 *= 2;
+                if (*start_2++ == '1') total_2 += 1;
+            }
+            printf("total %d\n", total_2);
+
+            switch(total_2)
+            {
+                case 2:
                     printf("Connection established\n");
                     break;
-                case 0x03:
+                case 3:
                     printf("Enter nickname: ");
                     scanf("%s" , nombre);               //TODO malo pasarlo a binario
                     // printf("largo %zu\n", strlen(nombre));
@@ -93,7 +118,9 @@ int main(int argc , char *argv[])
                     payload_size = (char*)&n;
                     message[0] = 0x04;      //return nickname
                     message[1] = *payload_size;
-                    memcpy(message + 2, nombre, strlen(nombre));
+                    memcpy(message, "00000100", 8);
+                    memcpy(message + 8, payload_size , 8);
+                    memcpy(message + 16, nombre, strlen(nombre));
                     // printf("mess: %s\n", message);
                     if(send(sock , message , 2 + n , 0) < 0){
                         puts("Send failed");
@@ -101,7 +128,7 @@ int main(int argc , char *argv[])
                     }
                     break;
 
-                case 0x05:
+                case 5:
                     largo_nombre_contrincante = (int)server_reply[1];
 
                     memcpy(nombre_contricante, server_reply + 2, largo_nombre_contrincante);
@@ -109,8 +136,42 @@ int main(int argc , char *argv[])
                     printf("Opponent found\n");
                     printf("Tu contricante se llama %s\n",nombre_contricante);
                     break;
+
+                case 6:
+                    // printf("ESta bien? %d\n", server_reply[1]);
+                    // bet = ((server_reply[2] << 8) | server_reply[3]);
+                    // bet = (int)server_reply[3]; 
+                    strncpy(otherString, server_reply + 16, 8);
+                    strncpy(otherString_2, server_reply + 24, 8);
+                    otherString[8] = '\0'; // place the null terminator
+                    otherString_2[8] = '\0'; // place the null terminator
+                    name_with_extension = malloc(8+1+8); /* make space for the new string (should check the return value ...) */
+                    strcpy(name_with_extension, otherString); /* copy name into the new var */
+                    strcat(name_with_extension, otherString_2); /* add the extension */
+                    printf("Initial bet: %s\n", name_with_extension);
+                    start = &name_with_extension[0];
+                    while (*start)
+                    {
+                        total *= 2;
+                        if (*start++ == '1') total += 1;
+                    }
+                    // int character_bin_int(char binario[])
+                    // if (strlen(name_with_extension) == 1){
+                        printf("NUMERO: %d \n", total);
+                    // }
+                    // for (i=0; i < strlen(name_with_extension)-3; i++)
+                    // {
+                    //     if (name_with_extension[i] == 49) // 49 es un 1 en asci
+                    //     {
+                    //         total += pow(2, strlen(name_with_extension)-4-i);
+                    //     }
+                    // }
+                    // printf("NUMERO: %d \n", total);
+
+
+
                 default:
-                    printf("Default error No implementado");
+                    printf("Default error No implementado\n");
             }
         }
     }

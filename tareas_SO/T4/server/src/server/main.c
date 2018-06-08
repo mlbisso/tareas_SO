@@ -152,28 +152,47 @@ void *connection_handler(void *socket_desc)
         largo_nombre = (int)client_message[1];
         char nombre[largo_nombre + 1];
 
-        switch(client_message[0])
+        char id[8];
+        memcpy(id, client_message, 8);
+        id[8] = '\0';
+        char* start;
+        start = &id[0];
+        int total;
+        while (*start)
         {
-            case 0x01:
+            total *= 2;
+            if (*start++ == '1') total += 1;
+        }
+        printf("total %d\n", total);
+
+        switch(total)
+        {
+            case 1:
                 printf("Start connection client %d\n", num_jugador);
-                message[0] = 0x02;          //para connection established
-                message[1] = 0x00;
-                message[2] = 0x00;
-                message[3] = '\0';
-                if(send(sock , message , 4 , 0) < 0){
+                // message[0] = 0x02;          //para connection established
+                // message[1] = 0x00;
+                // message[2] = 0x00;
+                // message[3] = '\0';
+                memcpy(message, "00000010", 8);
+                memcpy(message + 8, "00000000", 8);
+                memcpy(message + 16, "00000000", 8);
+                if(send(sock , message , 3 * 8 , 0) < 0){
                     puts("Send failed");
                 }
-                message[0] = 0x03;          //ask_nickname
-                message[1] = 0x00;
-                message[2] = 0x00;
-                message[3] = '\0';
+                // message[0] = 0x03;          //ask_nickname
+                // message[1] = 0x00;
+                // message[2] = 0x00;
+                // message[3] = '\0';
+                memcpy(message, "00000011", 8);
+                memcpy(message + 8, "00000000", 8);
+                memcpy(message + 16, "00000000", 8);
                 if(send(sock , message , 4 , 0) < 0){
                     puts("Send failed");
                 }
                 // client_message[0] = 0x00;
                 break;
 
-            case 0x04:
+            case 4:
                 strncpy(nombre, client_message + 2, largo_nombre);
                 // printf("l1: %s", client_message);
                 nombre[largo_nombre] = '\0';
@@ -214,8 +233,26 @@ void *connection_handler(void *socket_desc)
                     }
 
                     //Initial pot
-                    message[0] = 0x06;
-                    message[1] = 
+                    memcpy(message, "00000110", 8);
+                    memcpy(message + 8, "00000010", 8);
+                    memcpy(message + 16, "00000011", 8);
+                    memcpy(message + 24, "11101000", 8);
+                    // message[0] = 0x06;          //Initial pot
+                    // message[1] = 0x02;          //son dos bytes de payload
+                    // message[2] = 0b00000011;          //1000 de pot...
+                    // message[3] = 0b11101000;
+                    // message[4] = '\0';
+
+ 
+
+                    if(send(clientes[0] , message , 4 * 8 , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    }
+                    if(send(clientes[1] , message , 4 * 8 , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    }                    
                     //TODO siguiente: 0x06 0x07...
 
                 }
