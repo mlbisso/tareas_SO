@@ -71,9 +71,11 @@ int main(int argc , char *argv[])
     //keep communicating with server
     char nombre_contricante[2000];
     int largo_nombre_contrincante;
-    uint16_t bet = 0;
+    uint16_t pot = 0;
     char payload_size[8];
     char large[8];
+    char payload[2000];
+    int tamano = 0;
     while(1)
     {
         if(recv(sock , server_reply, 2000, 0) < 0){
@@ -89,7 +91,7 @@ int main(int argc , char *argv[])
             memcpy(id, server_reply, 8);
             id[8] = '\0';
             int id_switch;
-            id_switch = binary_to_decimal(id);
+            id_switch = binary_to_decimal(id, 8);
             // char* start_2;
             // start_2 = &id[0];
             // int total_2;
@@ -111,7 +113,7 @@ int main(int argc , char *argv[])
                     scanf("%s" , nombre);               //TODO malo pasarlo a binario
                     // printf("largo %zu\n", strlen(nombre));
                     n = strlen(nombre);
-                    int_to_bits(payload_size, n);
+                    int_to_bits(payload_size, n, 8);
                     // printf("payload_size: %s\n", payload_size);
                     // message[0] = 0x04;      //return nickname
                     // message[1] = *payload_size;
@@ -127,7 +129,7 @@ int main(int argc , char *argv[])
 
                 case 5:
                     memcpy(large, server_reply + 8, 8);
-                    largo_nombre_contrincante = binary_to_decimal(large);
+                    largo_nombre_contrincante = binary_to_decimal(large, 8);
 
                     memcpy(nombre_contricante, server_reply + 2 * 8, largo_nombre_contrincante);
                     nombre_contricante[largo_nombre_contrincante] = '\0';
@@ -136,41 +138,48 @@ int main(int argc , char *argv[])
                     break;
 
                 case 6:
-                    // printf("ESta bien? %d\n", server_reply[1]);
-                    // bet = ((server_reply[2] << 8) | server_reply[3]);
-                    // bet = (int)server_reply[3]; 
-                    // strncpy(otherString, server_reply + 16, 8);
-                    // strncpy(otherString_2, server_reply + 24, 8);
-                    // otherString[8] = '\0'; // place the null terminator
-                    // otherString_2[8] = '\0'; // place the null terminator
-                    // name_with_extension = malloc(8+1+8); /* make space for the new string (should check the return value ...) */
-                    // strcpy(name_with_extension, otherString); /* copy name into the new var */
-                    // strcat(name_with_extension, otherString_2); /* add the extension */
                     name_with_extension = concatenate_two_strings(server_reply);
-                    printf("Initial bet: %s\n", name_with_extension);
-                    // start = &name_with_extension[0];
-                    // while (*start)
-                    // {
-                    //     total *= 2;
-                    //     if (*start++ == '1') total += 1;
-                    // }
-                    // int character_bin_int(char binario[])
-                    // if (strlen(name_with_extension) == 1){
-                        // printf("NUMERO: %d \n", binary_to_decimal(name_with_extension));
-                    // }
-                    // for (i=0; i < strlen(name_with_extension)-3; i++)
-                    // {
-                    //     if (name_with_extension[i] == 49) // 49 es un 1 en asci
-                    //     {
-                    //         total += pow(2, strlen(name_with_extension)-4-i);
-                    //     }
-                    // }
-                    // printf("NUMERO: %d \n", total);
+                    // sleep(1);
+                    memcpy(large, server_reply + 8, 8); 
+                    tamano = binary_to_decimal(large, 8);
+                    memcpy(payload, server_reply + 16, tamano * 8);
+                    pot = binary_to_decimal(payload, tamano * 8);
+                    // pot = binary_to_decimal(name_with_extension, 8);
+                    // pot = 1;
+                    printf("Initial pot: %d\n", pot);
+                    // sleep(0.5);
+                    break;
 
+                case 7:
+                    printf("Comienza el juego\n");
+                    break;
 
+                case 8:
+                    printf("Comienza una nueva ronda\n");
+                    memcpy(large, server_reply + 8, 8); 
+                    tamano = binary_to_decimal(large, 8);
+                    memcpy(payload, server_reply + 16, tamano * 8);
+                    pot = binary_to_decimal(payload, tamano * 8);
+                    printf("Tu pot actual es: %d\n", pot);
+                    break;
+
+                case 20:
+                    memcpy(payload, server_reply + 16, 8);
+                    if (binary_to_decimal(payload, 8) == 1){
+                        printf("Ganaste :)\n");
+                    }
+                    else if(binary_to_decimal(payload, 8) == 2){
+                        printf("Perdiste :( \n");
+                    }
+
+                case 22:
+                    printf("El juego termino\n");
+                    break;
 
                 default:
                     printf("Default error No implementado\n");
+
+                    // break;
             }
         }
     }

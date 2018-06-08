@@ -12,12 +12,14 @@
 #include <sys/wait.h>  
 #include "sys/time.h"
 
-int binary_to_decimal(char* binary){
+int binary_to_decimal(char* binary, int tamano){
 	char* start;
 	int total = 0;
+    int i = 0;
     start = &binary[0];
-    while (*start)
+    while (*start && i != tamano)
     {
+        i++;
         total *= 2;
         if (*start++ == '1') total += 1;
     }
@@ -38,8 +40,8 @@ char * concatenate_two_strings(char* server_reply){
     return name_with_extension;
 }
 
-void int_to_bits(char* resultado, int numero){
-	int i = 7;
+void int_to_bits(char* resultado, int numero, int tamano){
+	int i = tamano - 1;
 	while(numero != 0){
 		if (numero % 2 == 0){			//hay que agregar un cero al final
 			memcpy(resultado + i, "0", 1);
@@ -53,5 +55,5 @@ void int_to_bits(char* resultado, int numero){
 	for (int j = i; j >= 0; j --){
 		memcpy(resultado + j, "0", 1);
 	}
-	resultado[8] = '\0';
+	resultado[tamano] = '\0';
 }

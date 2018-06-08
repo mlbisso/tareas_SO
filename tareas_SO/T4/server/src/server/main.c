@@ -16,6 +16,9 @@ int jugadores = 0;
 int clientes[2];                //Guarda los sockets
 char nombre_j1[2000];
 char nombre_j2[2000];
+int pot_j1;
+int pot_j2;
+
 Carta ** mazo;
 // nombre_j1 = ;
 // nombre_j2 = ;
@@ -31,6 +34,13 @@ int main(int argc , char *argv[]){
         printf("\t <tcp-port> es el puerto TCP donde se establecer´an las conexiones. \n");
         return 1;
     }
+
+    pot_j1 = 1000;
+    pot_j2 = 1000;
+
+    //TODO
+    // pot_j1 = 1;
+    // pot_j2 = 1000;
 
     mazo = inicializar_mazo();
 
@@ -155,22 +165,25 @@ void *connection_handler(void *socket_desc)
         memcpy(id, client_message, 8);
         id[8] = '\0';
         int id_switch;
-        id_switch = binary_to_decimal(id);
+        id_switch = binary_to_decimal(id, 8);
         // printf("total %d\n", id_switch);
 
         char largo_payload[8];
         memcpy(largo_payload, client_message + 8, 8);
         printf("Client message: %s\n", client_message);
-        largo_nombre = binary_to_decimal(largo_payload);
+        largo_nombre = binary_to_decimal(largo_payload, 8);
         char nombre[largo_nombre + 1];
 
         int n;
-        char payload_size[8];
+        char payload_size[1000];
+        char payload[2000];
+
+        int tamano;
 
         switch(id_switch)
         {
             case 1:
-                printf("Start connection client %d\n", num_jugador);
+                printf("Start  new connection \n");
                 // message[0] = 0x02;          //para connection established
                 // message[1] = 0x00;
                 // message[2] = 0x00;
@@ -218,7 +231,7 @@ void *connection_handler(void *socket_desc)
                     //TODO cambiar
                     //Opponent found
                     n = strlen(nombre_j1);
-                    int_to_bits(payload_size, n);
+                    int_to_bits(payload_size, n, 8);
                     // printf("payload_size: %s\n", payload_size);
 
                     memcpy(message, "00000101", 8);
@@ -231,7 +244,7 @@ void *connection_handler(void *socket_desc)
                     }
                     // printf("") 
                     n = strlen(nombre_j2);
-                    int_to_bits(payload_size, n);
+                    int_to_bits(payload_size, n, 8);
                     // printf("payload_size: %s\n", payload_size);
 
                     memcpy(message, "00000101", 8);
@@ -262,9 +275,98 @@ void *connection_handler(void *socket_desc)
                     if(send(clientes[1] , message , 4 * 8 , 0) < 0){
                         puts("Send failed");
                         break;
-                    }                    
-                    //TODO siguiente: 0x06 0x07...
+                    }    
+                    // sleep(0.5);
+                    //Game start
+                    memcpy(message, "00000111", 8);
+                    memcpy(message + 8, "00000000", 8);
+                    memcpy(message + 16, "00000000", 8);
+                    memcpy(message + 24, "00000000", 8);                
+                    sleep(2);
+                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    } 
+                    sleep(2);
+                    if(send(clientes[1] , message , 3 * 8 , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    } 
+                     
+                    //DESDE POT > 10?
+                    if (pot_j1 < 10 || pot_j2 < 10){
+                        //GAME END
+                        memcpy(message, "00010110", 8);
+                        memcpy(message + 8, "00000000", 8);
+                        memcpy(message + 16, "00000000", 8); 
+                        if(send(clientes[0] , message , 3 * 8 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        } 
+                        if(send(clientes[1] , message , 3 * 8 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        }     
 
+                        //WINNER LOSE
+                        memcpy(message, "00010100", 8);
+                        memcpy(message + 8, "00000001", 8);
+                        //mensaje ganador
+                        memcpy(message + 16, "00000001", 8); 
+                        if (pot_j1 < 10){       //el 1 perdio
+                            sleep(1);
+                            if(send(clientes[1] , message , 3 * 8 , 0) < 0){        //el 2 gano
+                                puts("Send failed");
+                                break;
+                            }
+                            sleep(1);
+                            memcpy(message + 16, "00000010", 8);        //el 1 perdio
+                            if(send(clientes[0] , message , 3 * 8 , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            }                                                   
+                        }
+                        else{
+                            sleep(1);
+                            if(send(clientes[0] , message , 3 * 8 , 0) < 0){        //el 2 gano
+                                puts("Send failed");
+                                break;
+                            }
+                            memcpy(message + 16, "00000010", 8);        //el 1 perdio
+                            sleep(1);
+                            if(send(clientes[1] , message , 3 * 8 , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            }     
+                        }                                           
+                    //TODO image  
+                    }
+                    else{
+                        //START ROUND
+                        memcpy(message, "00001000", 8);
+
+                        tamano = obtener_tamano_bytes(pot_j1);
+                        int_to_bits(payload_size, tamano, 8);       //quiero guardar en payload siz el tamano en 1B
+                        memcpy(message + 8, payload_size, 8);
+
+                        int_to_bits(payload_size, pot_j1, tamano);
+                        memcpy(message + 16, payload_size, tamano);
+                        if(send(clientes[0] , message , 16 + tamano * 8 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        } 
+
+                        tamano = obtener_tamano_bytes(pot_j2);
+                        int_to_bits(payload_size, tamano, 8);       //quiero guardar en payload siz el tamano en 1B
+                        memcpy(message + 8, payload_size, 8);
+
+                        int_to_bits(payload_size, pot_j2, tamano);
+                        memcpy(message + 16, payload_size, tamano);
+                        if(send(clientes[1] , message , 16 + tamano * 8 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        }   
+                    }
                 }
                 break;
 
