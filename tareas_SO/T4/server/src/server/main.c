@@ -143,29 +143,31 @@ void *connection_handler(void *socket_desc)
     // write(sock , message , strlen(message));
      
     //Receive a message from client
-    int n;
-            char* payload_size;
+    // int n;
+    // char* payload_size;
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
     {  	
         //Send the message back to client
             // write(sock , client_message , strlen(client_message));
-        largo_nombre = (int)client_message[1];
-        char nombre[largo_nombre + 1];
+
 
         char id[8];
         memcpy(id, client_message, 8);
         id[8] = '\0';
-        char* start;
-        start = &id[0];
-        int total;
-        while (*start)
-        {
-            total *= 2;
-            if (*start++ == '1') total += 1;
-        }
-        printf("total %d\n", total);
+        int id_switch;
+        id_switch = binary_to_decimal(id);
+        // printf("total %d\n", id_switch);
 
-        switch(total)
+        char largo_payload[8];
+        memcpy(largo_payload, client_message + 8, 8);
+        printf("Client message: %s\n", client_message);
+        largo_nombre = binary_to_decimal(largo_payload);
+        char nombre[largo_nombre + 1];
+
+        int n;
+        char payload_size[8];
+
+        switch(id_switch)
         {
             case 1:
                 printf("Start connection client %d\n", num_jugador);
@@ -186,15 +188,15 @@ void *connection_handler(void *socket_desc)
                 memcpy(message, "00000011", 8);
                 memcpy(message + 8, "00000000", 8);
                 memcpy(message + 16, "00000000", 8);
-                if(send(sock , message , 4 , 0) < 0){
+                if(send(sock , message , 3 * 8 , 0) < 0){
                     puts("Send failed");
                 }
                 // client_message[0] = 0x00;
                 break;
 
             case 4:
-                strncpy(nombre, client_message + 2, largo_nombre);
-                // printf("l1: %s", client_message);
+                strncpy(nombre, client_message + 2 * 8, largo_nombre);
+                // printf("l1: %d\n", largo_nombre);
                 nombre[largo_nombre] = '\0';
                 jugadores += 1;
                 num_jugador = jugadores;
@@ -213,21 +215,29 @@ void *connection_handler(void *socket_desc)
 
                 }
                 if (jugadores == 2){
-                    message[0] = 0x05;
+                    //TODO cambiar
+                    //Opponent found
                     n = strlen(nombre_j1);
-                    payload_size = (char*)&n;
-                    message[1] = *payload_size;
-                    memcpy(message + 2, nombre_j1, n);
-                    if(send(clientes[1] , message , 2 + n , 0) < 0){
+                    int_to_bits(payload_size, n);
+                    // printf("payload_size: %s\n", payload_size);
+
+                    memcpy(message, "00000101", 8);
+                    memcpy(message + 8, payload_size, 8);
+                    memcpy(message + 16, nombre_j1, n);
+
+                    if(send(clientes[1] , message , 2 *8 + n , 0) < 0){
                         puts("Send failed");
                         break;
                     }
                     // printf("") 
                     n = strlen(nombre_j2);
-                    payload_size = (char*)&n;
-                    message[1] = *payload_size;
-                    memcpy(message + 2, nombre_j2, n);
-                    if(send(clientes[0] , message , 2 + n , 0) < 0){
+                    int_to_bits(payload_size, n);
+                    // printf("payload_size: %s\n", payload_size);
+
+                    memcpy(message, "00000101", 8);
+                    memcpy(message + 8, payload_size, 8);
+                    memcpy(message + 16, nombre_j2, n);
+                    if(send(clientes[0] , message , 2 * 8 + n , 0) < 0){
                         puts("Send failed");
                         break;
                     }
