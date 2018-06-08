@@ -5,6 +5,9 @@
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>    //write
 #include<pthread.h> //for threading , link with lpthread
+#include <time.h>
+#include "funcs.h"
+
  
 //the thread function
 void *connection_handler(void *);
@@ -13,6 +16,7 @@ int jugadores = 0;
 int clientes[2];                //Guarda los sockets
 char nombre_j1[2000];
 char nombre_j2[2000];
+Carta ** mazo;
 // nombre_j1 = ;
 // nombre_j2 = ;
 
@@ -27,6 +31,8 @@ int main(int argc , char *argv[]){
         printf("\t <tcp-port> es el puerto TCP donde se establecer´an las conexiones. \n");
         return 1;
     }
+
+    mazo = inicializar_mazo();
 
     clientes[0] = -1;
     clientes[1] = -1;
@@ -129,9 +135,6 @@ void *connection_handler(void *socket_desc)
         clientes[1] = sock;
     }
 
-    jugadores += 1;
-    num_jugador = jugadores;
-
     //Send some messages to the client
     // message = "Greetings! I am your connection handler\n";
     // write(sock , message , strlen(message));
@@ -169,10 +172,13 @@ void *connection_handler(void *socket_desc)
                 }
                 // client_message[0] = 0x00;
                 break;
+
             case 0x04:
                 strncpy(nombre, client_message + 2, largo_nombre);
                 // printf("l1: %s", client_message);
                 nombre[largo_nombre] = '\0';
+                jugadores += 1;
+                num_jugador = jugadores;
                 printf("El nombre del jugador %d es : %s\n", num_jugador, nombre);
                 if (clientes[0] == sock){
                     memcpy(nombre_j1, nombre, largo_nombre);
@@ -189,7 +195,6 @@ void *connection_handler(void *socket_desc)
                 }
                 if (jugadores == 2){
                     message[0] = 0x05;
-
                     n = strlen(nombre_j1);
                     payload_size = (char*)&n;
                     message[1] = *payload_size;
@@ -207,8 +212,15 @@ void *connection_handler(void *socket_desc)
                         puts("Send failed");
                         break;
                     }
+
+                    //Initial pot
+                    message[0] = 0x06;
+                    message[1] = 
+                    //TODO siguiente: 0x06 0x07...
+
                 }
                 break;
+
             default:
                 printf("Default en switch client message");
         }
