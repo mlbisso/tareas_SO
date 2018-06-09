@@ -13,6 +13,7 @@ Carta* carta_init(int numero, int pinta)
 	Carta* carta = malloc(sizeof(Carta));
 	carta -> numero = numero;
 	carta -> pinta = pinta;
+    carta -> valido = 1;
   	return carta;
 }
 
@@ -27,6 +28,45 @@ void barajar(Carta **array, int a, int b) {
             array[i][z] = t;           
         }
     }
+}
+
+// Carta ** inicializar_mano(){
+
+// }
+
+int repartir_cartas(Carta **mazo, Carta ** mano, int carta_superior){
+    // int fila = (int)(carta_superior/13);
+    // int columna = (int)(carta_superior/4) + 1;
+    int z = 0;
+    for (int i = 0; i < 13; i++) {
+        for (int j = 0; j < 4; j++){
+            if (z == 5){
+                break;
+            }
+            // printf("%d %d\n", mazo[i][j].numero, mazo[i][j].pinta);
+            if (mazo[i][j].valido == 1){
+                mazo[i][j].valido = 0;
+                Carta *carta = carta_init(mazo[i][j].numero, mazo[i][j].pinta);
+                mano[z][0] = *carta;
+                // printf("%d %d\n", mano[z][0].numero, mano[z][0].pinta);
+                z ++;                
+            }
+        }
+        if (z == 5){
+            break;
+        }
+    }
+    // printf("\n");
+    return carta_superior + 5;
+}
+
+Carta ** inicializar_mano(){
+    Carta **cartas = (Carta **) malloc(5 * sizeof(Carta *));
+
+    for(int i = 0; i < 5; i++){
+        cartas[i] = (Carta *) malloc(sizeof(Carta));
+    }
+    return cartas;
 }
 
 Carta ** inicializar_mazo(){

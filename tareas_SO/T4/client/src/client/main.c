@@ -72,6 +72,7 @@ int main(int argc , char *argv[])
     char nombre_contricante[2000];
     int largo_nombre_contrincante;
     uint16_t pot = 0;
+    uint16_t bet = 0;
     char payload_size[8];
     char large[8];
     char payload[2000];
@@ -161,6 +162,19 @@ int main(int argc , char *argv[])
                     memcpy(payload, server_reply + 16, tamano * 8);
                     pot = binary_to_decimal(payload, tamano * 8);
                     printf("Tu pot actual es: %d\n", pot);
+                    break;
+
+                case 9:
+                    memcpy(large, server_reply + 8, 8); 
+                    tamano = binary_to_decimal(large, 8);
+                    memcpy(payload, server_reply + 16, tamano * 8);
+                    bet = binary_to_decimal(payload, tamano * 8);
+                    printf("Initial bet: %d\n", bet);
+                    break;
+
+                case 10:
+                    printf("Estas son tus cartas\n");
+                    
                     break;
 
                 case 20:

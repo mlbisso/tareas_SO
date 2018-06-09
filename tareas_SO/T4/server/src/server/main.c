@@ -19,7 +19,11 @@ char nombre_j2[2000];
 int pot_j1;
 int pot_j2;
 
+int carta_superior;               //cual es el indice de la prox carta a sacar
+
 Carta ** mazo;
+Carta ** mano_j1;
+Carta ** mano_j2;
 // nombre_j1 = ;
 // nombre_j2 = ;
 
@@ -37,12 +41,14 @@ int main(int argc , char *argv[]){
 
     pot_j1 = 1000;
     pot_j2 = 1000;
-
+    carta_superior = 0;
     //TODO
     // pot_j1 = 1;
     // pot_j2 = 1000;
 
     mazo = inicializar_mazo();
+    mano_j1 = inicializar_mano();
+    mano_j2 = inicializar_mano();
 
     clientes[0] = -1;
     clientes[1] = -1;
@@ -365,7 +371,55 @@ void *connection_handler(void *socket_desc)
                         if(send(clientes[1] , message , 16 + tamano * 8 , 0) < 0){
                             puts("Send failed");
                             break;
-                        }   
+                        }
+
+                        //REPARTIR CARTAS
+                        carta_superior = repartir_cartas(mazo, mano_j1, carta_superior);
+                        carta_superior = repartir_cartas(mazo, mano_j2, carta_superior);
+
+                        // for (int i = 0; i < 5; i++){
+                        //     printf("%d %d\n", mano_j1[i][0].numero, mano_j1[i][0].pinta);
+                        //     printf("%d %d\n", mano_j2[i][0].numero, mano_j2[i][0].pinta);
+                        // }
+
+                        //Initial Bet
+                        memcpy(message, "00001001", 8);
+                        memcpy(message + 8, "00000001", 8);
+                        memcpy(message + 16, "00001010", 8);  
+                        if(send(clientes[0] , message , 3 * 8 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        }
+                        if(send(clientes[1] , message , 3* 8 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        }                       
+
+                        //5 cards
+                        memcpy(message, "00001010", 8);
+                        memcpy(message + 8, "00001010", 8);
+                        for (int i = 0; i < 5; i ++){
+                            int_to_bits(payload_size, mano_j1[i][0].numero, 8);
+                            memcpy(message + 16 + 16 * i, , 8);       //numero carta
+                            int_to_bits(payload_size, mano_j1[i][0].pinta, 8);
+                            memcpy(message + 24 + 16 * i, "00001010", 8);       //pinta carta                                        
+                        }
+                        if(send(clientes[0] , message , 2 * 8 + 5 * 16 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        }  
+
+                        for (int i = 0; i < 5; i ++){
+                            int_to_bits(payload_size, mano_j2[i][0].numero, 8);
+                            memcpy(message + 16 + 16 * i, , 8);       //numero carta
+                            int_to_bits(payload_size, mano_j2[i][0].pinta, 8);
+                            memcpy(message + 24 + 16 * i, "00001010", 8);       //pinta carta                                        
+                        }
+                        if(send(clientes[1] , message , 2 * 8 + 5 * 16 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        }  
+
                     }
                 }
                 break;
