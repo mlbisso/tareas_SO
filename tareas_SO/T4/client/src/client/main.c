@@ -77,6 +77,10 @@ int main(int argc , char *argv[])
     char large[8];
     char payload[2000];
     int tamano = 0;
+    int carta = 0;
+    int pinta = 0;
+    int mi_turno = 0;
+    wchar_t pinta_unicode;
     while(1)
     {
         if(recv(sock , server_reply, 2000, 0) < 0){
@@ -174,7 +178,64 @@ int main(int argc , char *argv[])
 
                 case 10:
                     printf("Estas son tus cartas\n");
-                    
+                    memcpy(large, server_reply + 8, 8); 
+                    tamano = binary_to_decimal(large, 8);
+                    for (int i = 0; i < (tamano / 2); i++){
+                        memcpy(payload, server_reply + 16 + 16 * i, 8);
+                        carta = binary_to_decimal(payload, 8);
+                        if (carta == 1){
+                            printf("A");
+                        }
+                        else if (carta == 11){
+                            printf("J");
+                        }                        
+                        else if (carta == 12){
+                            printf("Q");
+                        }                        
+                        else if (carta == 13){
+                            printf("K");
+                        }
+                        else{
+                            printf("%d", carta);
+                        }
+                        memcpy(payload, server_reply + 16 + 8 + 16 * i, 8);
+                        pinta = binary_to_decimal(payload, 8);
+                        // if (pinta == 1){
+                        //     pinta_unicode = 'U+2665';
+                        // }
+                        // if (pinta == 2){
+                        //     pinta_unicode = 'U+2666';
+                        // }                        
+                        // if (pinta == 3){
+                        //     pinta_unicode = 'U+2663';
+                        // }                        
+                        // if (pinta == 4){
+                        //     pinta_unicode = 'U+2660';
+                        // }
+                        // printf("%c  ", pinta_unicode);
+                        printf("%d  ", pinta);
+
+                    }
+                    printf("\n");
+                    break;
+
+                case 11:
+                    memcpy(large, server_reply + 8, 8); 
+                    tamano = binary_to_decimal(large, 8);
+                    for (int i = 0; i < tamano; i++){
+                        memcpy(payload, server_reply + 16 + 8 * i, 8);
+                        mi_turno = binary_to_decimal(payload, 8);
+                        if (mi_turno == 1){
+                            printf("Comienzas jugando tu\n");
+                        }
+                        else if (mi_turno == 2){
+                            printf("Comienza jugando tu contrincante\n");
+                        }
+                    }                    
+                    break;
+
+                case 12:
+                    printf("Que cartas deseas cambiar?\n");
                     break;
 
                 case 20:

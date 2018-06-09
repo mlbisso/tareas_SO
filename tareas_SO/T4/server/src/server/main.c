@@ -185,6 +185,7 @@ void *connection_handler(void *socket_desc)
         char payload[2000];
 
         int tamano;
+        int comienza;
 
         switch(id_switch)
         {
@@ -194,6 +195,8 @@ void *connection_handler(void *socket_desc)
                 // message[1] = 0x00;
                 // message[2] = 0x00;
                 // message[3] = '\0';
+
+                // sleep(1);
                 memcpy(message, "00000010", 8);
                 memcpy(message + 8, "00000000", 8);
                 memcpy(message + 16, "00000000", 8);
@@ -204,6 +207,8 @@ void *connection_handler(void *socket_desc)
                 // message[1] = 0x00;
                 // message[2] = 0x00;
                 // message[3] = '\0';
+
+                // sleep(1);
                 memcpy(message, "00000011", 8);
                 memcpy(message + 8, "00000000", 8);
                 memcpy(message + 16, "00000000", 8);
@@ -377,10 +382,14 @@ void *connection_handler(void *socket_desc)
                         carta_superior = repartir_cartas(mazo, mano_j1, carta_superior);
                         carta_superior = repartir_cartas(mazo, mano_j2, carta_superior);
 
-                        // for (int i = 0; i < 5; i++){
-                        //     printf("%d %d\n", mano_j1[i][0].numero, mano_j1[i][0].pinta);
-                        //     printf("%d %d\n", mano_j2[i][0].numero, mano_j2[i][0].pinta);
-                        // }
+                        for (int i = 0; i < 5; i++){
+                            printf("%d%d    ", mano_j1[i][0].numero, mano_j1[i][0].pinta);
+                        }
+
+                        for (int i = 0; i < 5; i++){
+                            printf("%d %d\n", mano_j2[i][0].numero, mano_j2[i][0].pinta);
+                        }
+
 
                         //Initial Bet
                         memcpy(message, "00001001", 8);
@@ -400,10 +409,11 @@ void *connection_handler(void *socket_desc)
                         memcpy(message + 8, "00001010", 8);
                         for (int i = 0; i < 5; i ++){
                             int_to_bits(payload_size, mano_j1[i][0].numero, 8);
-                            memcpy(message + 16 + 16 * i, , 8);       //numero carta
+                            memcpy(message + 16 + 16 * i, payload_size , 8);       //numero carta
                             int_to_bits(payload_size, mano_j1[i][0].pinta, 8);
-                            memcpy(message + 24 + 16 * i, "00001010", 8);       //pinta carta                                        
+                            memcpy(message + 24 + 16 * i, payload_size, 8);       //pinta carta                                        
                         }
+                        sleep(1);
                         if(send(clientes[0] , message , 2 * 8 + 5 * 16 , 0) < 0){
                             puts("Send failed");
                             break;
@@ -411,14 +421,66 @@ void *connection_handler(void *socket_desc)
 
                         for (int i = 0; i < 5; i ++){
                             int_to_bits(payload_size, mano_j2[i][0].numero, 8);
-                            memcpy(message + 16 + 16 * i, , 8);       //numero carta
+                            memcpy(message + 16 + 16 * i, payload_size , 8);       //numero carta
                             int_to_bits(payload_size, mano_j2[i][0].pinta, 8);
-                            memcpy(message + 24 + 16 * i, "00001010", 8);       //pinta carta                                        
+                            memcpy(message + 24 + 16 * i, payload_size, 8);       //pinta carta                                        
                         }
+                        sleep(1);
                         if(send(clientes[1] , message , 2 * 8 + 5 * 16 , 0) < 0){
                             puts("Send failed");
                             break;
                         }  
+
+                        //WHOS FIRST
+                        comienza = quien_empieza();
+                        memcpy(message, "00001011", 8);
+                        memcpy(message + 8, "00000001", 8);
+
+                        if (comienza == 0){         //comienza el jugador 1
+                            memcpy(message + 16, "00000001", 8);
+                            if(send(clientes[0] , message , 8*3 , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            }  
+                            memcpy(message + 16, "00000010", 8);
+                            if(send(clientes[1] , message , 8*3 , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            }  
+
+                            //GET CARDS TO CHANGE
+                            memcpy(message, "00001100", 8);
+                            memcpy(message + 8, "00000000", 8);
+                            memcpy(message + 16, "00000000", 8);   
+                            if(send(clientes[0] , message , 8*3 , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            }  
+                        }
+
+                        else if (comienza == 1){         //comienza el jugador 2
+                            memcpy(message + 16, "00000001", 8);
+                            if(send(clientes[1] , message , 8*3 , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            }  
+                            memcpy(message + 16, "00000010", 8);
+                            if(send(clientes[0] , message , 8*3 , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            }  
+                            //GET CARDS TO CHANGE
+                            memcpy(message, "00001100", 8);
+                            memcpy(message + 8, "00000000", 8);
+                            memcpy(message + 16, "00000000", 8);   
+                            if(send(clientes[1] , message , 8*3 , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            } 
+
+
+                        }
+
 
                     }
                 }

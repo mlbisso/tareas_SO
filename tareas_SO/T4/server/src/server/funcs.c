@@ -60,6 +60,17 @@ int repartir_cartas(Carta **mazo, Carta ** mano, int carta_superior){
     return carta_superior + 5;
 }
 
+int quien_empieza(){
+    srand(time(NULL));  
+    int r = rand() % 2;
+    return r;
+}
+
+int quien_gano(Carta ** mano_j1, Carta ** mano_j2){
+    
+    return 0;
+}
+
 Carta ** inicializar_mano(){
     Carta **cartas = (Carta **) malloc(5 * sizeof(Carta *));
 
