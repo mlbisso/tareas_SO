@@ -21,6 +21,6 @@ void int_to_bits(char* resultado, int numero, int tamano);
 int obtener_tamano_bytes(int numero);
 
 int repartir_cartas(Carta **mazo, Carta ** mano, int carta_superior);
-
+int cambiar_carta(Carta ** mazo, Carta **mano, int carta, int pinta, int carta_superior);                        
 int quien_empieza();
 int quien_gano(Carta ** mano_j1, Carta ** mano_j2);

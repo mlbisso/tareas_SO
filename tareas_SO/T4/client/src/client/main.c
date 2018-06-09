@@ -80,6 +80,13 @@ int main(int argc , char *argv[])
     int carta = 0;
     int pinta = 0;
     int mi_turno = 0;
+
+    int cartas[5] = {0,0,0,0,0};
+    int pintas[5] = {0,0,0,0,0};
+
+    //para el cambio de cartas
+    int cartas_a_cambiar[5] = {0,0,0,0,0};
+    int cambio = 0;
     wchar_t pinta_unicode;
     while(1)
     {
@@ -181,8 +188,10 @@ int main(int argc , char *argv[])
                     memcpy(large, server_reply + 8, 8); 
                     tamano = binary_to_decimal(large, 8);
                     for (int i = 0; i < (tamano / 2); i++){
+                        printf("[%d]", i);
                         memcpy(payload, server_reply + 16 + 16 * i, 8);
                         carta = binary_to_decimal(payload, 8);
+                        cartas[i] = carta;
                         if (carta == 1){
                             printf("A");
                         }
@@ -200,6 +209,7 @@ int main(int argc , char *argv[])
                         }
                         memcpy(payload, server_reply + 16 + 8 + 16 * i, 8);
                         pinta = binary_to_decimal(payload, 8);
+                        pintas[i] = pinta;
                         // if (pinta == 1){
                         //     pinta_unicode = 'U+2665';
                         // }
@@ -235,7 +245,45 @@ int main(int argc , char *argv[])
                     break;
 
                 case 12:
-                    printf("Que cartas deseas cambiar?\n");
+                    printf("Escribe la posicion de la carta que deseas cambiar, una por una\n");
+                    printf("Cuando estes listo, escribe 6\n");
+                    memcpy(message, "00001101", 8);
+                    tamano = 0;                 
+                    while(1){
+                        printf("Que carta quieres cambiar?:\n");
+                        scanf("%d" , &cambio);               //TODO malo pasarlo a binario
+                        if (cambio == 6){
+                            for (int i = 0; i < 5; i ++){
+                                cartas_a_cambiar[i] = 0;
+                            }
+                            int_to_bits(payload_size, tamano, 8);
+                            memcpy(message + 8, payload_size, 8);
+                            sleep(1);
+                            if(send(sock , message , 2 * 8 + tamano * 8, 0) < 0){
+                                puts("Send failed");
+                                return 1;
+                            }
+                            break;
+                        }
+                        if (cambio > 6 || cambio == 5){
+                            printf("Ingresa numero valido\n");
+                            continue;
+                        }
+                        if (cartas_a_cambiar[cambio] != 0){
+                            printf("Esta carta ya fue seleccionada\n");
+                            continue;
+                        }
+                        else{
+                            int_to_bits(payload, cartas[cambio], 8);
+                            memcpy(message + 16 + 8 * tamano, payload, 8);
+                            int_to_bits(payload, pintas[cambio], 8);
+                            memcpy(message + 16 + 8 + 8 * tamano, payload, 8);
+
+                            cartas_a_cambiar[cambio] = 1; 
+                            tamano += 2;
+
+                        }
+                    }
                     break;
 
                 case 20:

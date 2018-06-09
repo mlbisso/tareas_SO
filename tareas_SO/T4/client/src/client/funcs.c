@@ -26,6 +26,7 @@ int binary_to_decimal(char* binary, int tamano){
     return total;
 }
 
+
 char * concatenate_two_strings(char* server_reply){
     char* name_with_extension;
     char otherString[8];

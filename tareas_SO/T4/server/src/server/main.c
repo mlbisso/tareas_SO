@@ -172,7 +172,7 @@ void *connection_handler(void *socket_desc)
         id[8] = '\0';
         int id_switch;
         id_switch = binary_to_decimal(id, 8);
-        // printf("total %d\n", id_switch);
+        printf("total %d\n", id_switch);
 
         char largo_payload[8];
         memcpy(largo_payload, client_message + 8, 8);
@@ -186,6 +186,10 @@ void *connection_handler(void *socket_desc)
 
         int tamano;
         int comienza;
+        int jugador_actual;
+
+        int carta = 0;
+        int pinta = 0;
 
         switch(id_switch)
         {
@@ -437,7 +441,9 @@ void *connection_handler(void *socket_desc)
                         memcpy(message + 8, "00000001", 8);
 
                         if (comienza == 0){         //comienza el jugador 1
+                            jugador_actual = 0;
                             memcpy(message + 16, "00000001", 8);
+                            sleep(1);
                             if(send(clientes[0] , message , 8*3 , 0) < 0){
                                 puts("Send failed");
                                 break;
@@ -459,7 +465,9 @@ void *connection_handler(void *socket_desc)
                         }
 
                         else if (comienza == 1){         //comienza el jugador 2
+                            jugador_actual = 1;
                             memcpy(message + 16, "00000001", 8);
+                            sleep(1);
                             if(send(clientes[1] , message , 8*3 , 0) < 0){
                                 puts("Send failed");
                                 break;
@@ -483,6 +491,74 @@ void *connection_handler(void *socket_desc)
 
 
                     }
+                }
+                break;
+
+            case 13:
+                memcpy(payload_size, client_message + 8, 8); 
+                tamano = binary_to_decimal(payload_size, 8);
+                // printf("tamano OLLA: %d\n", tamano);
+                for (int i = 0; i < (tamano / 2); i++){
+                    memcpy(payload, client_message + 16 + 16 * i, 8);
+                    carta = binary_to_decimal(payload, 8);
+                    memcpy(payload, client_message + 16 + 8 + 16 * i, 8);
+                    pinta = binary_to_decimal(payload, 8);
+                    if (jugador_actual == 0){
+                        carta_superior = cambiar_carta(mazo, mano_j1, carta, pinta, carta_superior);
+                    }
+                    else{
+                        carta_superior = cambiar_carta(mazo, mano_j2, carta, pinta, carta_superior);                        
+                    }
+                }
+                //RETURN FIVE CARDS
+                memcpy(message, "00001010", 8);
+                memcpy(message + 8, "00001010", 8);
+                if (jugador_actual == 0){
+                    for (int i = 0; i < 5; i ++){
+                        int_to_bits(payload_size, mano_j1[i][0].numero, 8);
+                        memcpy(message + 16 + 16 * i, payload_size , 8);       //numero carta
+                        int_to_bits(payload_size, mano_j1[i][0].pinta, 8);
+                        memcpy(message + 24 + 16 * i, payload_size, 8);       //pinta carta                                        
+                    }
+                    sleep(1);
+                    if(send(clientes[0] , message , 2 * 8 + 5 * 16 , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    }                     
+                }
+                else{
+                    for (int i = 0; i < 5; i ++){
+                        int_to_bits(payload_size, mano_j2[i][0].numero, 8);
+                        memcpy(message + 16 + 16 * i, payload_size , 8);       //numero carta
+                        int_to_bits(payload_size, mano_j2[i][0].pinta, 8);
+                        memcpy(message + 24 + 16 * i, payload_size, 8);       //pinta carta                                        
+                    }
+                    sleep(1);
+                    if(send(clientes[1] , message , 2 * 8 + 5 * 16 , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    } 
+                }
+
+                //VER a quien le toca
+                if (comienza == jugador_actual){            //le toca hace lo mismo al otro
+                    if (jugador_actual == 1){
+                        jugador_actual = 0;
+                    }
+                    else{
+                        jugador_actual = 1;
+                    }
+                    //GET CARDS TO CHANGE
+                    memcpy(message, "00001100", 8);
+                    memcpy(message + 8, "00000000", 8);
+                    memcpy(message + 16, "00000000", 8);   
+                    if(send(clientes[jugador_actual] , message , 8*3 , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    } 
+                }
+                else{
+                    jugador_actual = comienza;
                 }
                 break;
 

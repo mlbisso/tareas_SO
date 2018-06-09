@@ -34,6 +34,34 @@ void barajar(Carta **array, int a, int b) {
 
 // }
 
+int cambiar_carta(Carta ** mazo, Carta **mano, int carta, int pinta, int carta_superior){
+    int z;
+    for (z = 0; z < 5; z++){
+        if (mano[z][0].numero == carta && mano[z][0].pinta == pinta){
+            break;
+        }
+    }
+    int listo = 0;
+    for (int i = 0; i < 13; i++) {
+        for (int j = 0; j < 4; j++){
+            // printf("%d %d\n", mazo[i][j].numero, mazo[i][j].pinta);
+            if (mazo[i][j].valido == 1){
+                mazo[i][j].valido = 0;
+                Carta *carta = carta_init(mazo[i][j].numero, mazo[i][j].pinta);
+                mano[z][0] = *carta;
+                printf("%d %d\n", mano[z][0].numero, mano[z][0].pinta);
+                listo = 1;
+                break;
+            }
+        }
+        if (listo == 1){
+            break;
+        }
+    }
+    return carta_superior + 1;
+}
+
+
 int repartir_cartas(Carta **mazo, Carta ** mano, int carta_superior){
     // int fila = (int)(carta_superior/13);
     // int columna = (int)(carta_superior/4) + 1;
@@ -67,7 +95,7 @@ int quien_empieza(){
 }
 
 int quien_gano(Carta ** mano_j1, Carta ** mano_j2){
-    
+
     return 0;
 }
 
