@@ -62,6 +62,7 @@ int main(int argc , char *argv[])
         memcpy(message, "00000001", 8);
         memcpy(message + 8, "00000000", 8);
         memcpy(message + 16, "00000000", 8);
+        sleep(1);
         if(send(sock , message , 3 * 8 , 0) < 0){
             puts("Send failed");
             return 1;
@@ -83,6 +84,8 @@ int main(int argc , char *argv[])
 
     int cartas[5] = {0,0,0,0,0};
     int pintas[5] = {0,0,0,0,0};
+    int bets_disponibles[5] = {0,0,0,0,0};
+    int num = 0;
 
     //para el cambio de cartas
     int cartas_a_cambiar[5] = {0,0,0,0,0};
@@ -133,6 +136,7 @@ int main(int argc , char *argv[])
                     memcpy(message + 8, payload_size, 8);
                     memcpy(message + 16, nombre, strlen(nombre));
                     // printf("mess: %s\n", message);
+                    sleep(1);
                     if(send(sock , message , 2 * 8 + n , 0) < 0){
                         puts("Send failed");
                         return 1;
@@ -286,6 +290,162 @@ int main(int argc , char *argv[])
                     }
                     break;
 
+                case 14:
+                    for (int i = 0; i < 5; i++){
+                        bets_disponibles[i] = 0;
+                    }
+                    memcpy(large, server_reply + 8, 8); 
+                    tamano = binary_to_decimal(large, 8);
+                    printf("Estos son los bets disponibles:\n");
+                    for (int i = 0; i < tamano; i++){
+
+                        memcpy(payload, server_reply + 16 + 8 * i, 8);
+                        num = binary_to_decimal(payload, 8);
+                        printf("[%d]", num);
+                        bets_disponibles[num - 1] = 1;
+                        if (num == 1){
+                            printf("FOLD\n");
+                        }
+                        else if (num == 2){
+                            printf("0\n");
+                        }
+                        else if (num == 3){
+                            printf("100\n");
+                        }
+                        else if (num == 4){
+                            printf("200\n");
+                        }
+                        else if (num == 5){
+                            printf("500\n");
+                        }                    
+                    }
+                    while(1){
+                        printf("\nQue bet escoges?:\n");
+                        scanf("%d" , &cambio);
+                        if (cambio < 1 || cambio > 5){
+                            printf("Escoge un número válido\n");
+                            continue;
+                        }            
+                        else if(bets_disponibles[cambio - 1] == 0){
+                            printf("Escoge un número válido\n");
+                            continue;                            
+                        }       
+                        else{
+                            memcpy(message, "00001111", 8);
+                            memcpy(message + 8, "00000001", 8);
+                            int_to_bits(payload, cambio, 8);
+                            memcpy(message + 16, payload, 8);
+                            sleep(1);
+                            if(send(sock , message , 3 * 8 , 0) < 0){
+                                puts("Send failed");
+                                return 1;
+                            }
+                            break;
+                        }       
+                    }
+
+                    //TODO MAURO MAURO                    
+                    break;
+
+                case 16:
+                    printf("Error bet\n");
+                    printf("Estos son los bets disponibles:\n");
+                    for (int i = 0; i < 5; i++){
+                        if (bets_disponibles[i] == 0){
+                            continue;
+                        }
+                        printf("[%d]", i + 1);
+                        if (i == 0){
+                            printf("FOLD\n");
+                        }
+                        else if (i == 1){
+                            printf("0\n");
+                        }
+                        else if (i == 2){
+                            printf("100\n");
+                        }
+                        else if (i == 3){
+                            printf("200\n");
+                        }
+                        else if (i == 4){
+                            printf("500\n");
+                        }
+                    }
+                    while(1){
+                        printf("\nQue bet escoges?:\n");
+                        scanf("%d" , &cambio);
+                        if (cambio < 0 || cambio > 4){
+                            printf("Escoge un número válido\n");
+                            continue;
+                        }            
+                        else if(bets_disponibles[cambio] == 0){
+                            printf("Escoge un número válido\n");
+                            continue;                            
+                        }       
+                        else{
+                            memcpy(message, "00001111", 8);
+                            memcpy(message + 8, "00000001", 8);
+                            int_to_bits(payload, cambio, 8);
+                            memcpy(message + 16, payload, 8);
+                        }       
+                    }
+
+                    break;
+
+                case 17:
+                    printf("OK bet\n");
+                    break;
+
+                case 18:
+                    printf("Se termino la ronda actual\n");
+                    break;
+
+                case 19:
+                    printf("Estas son las cartas de tu oponente:\n");
+                    memcpy(large, server_reply + 8, 8); 
+                    tamano = binary_to_decimal(large, 8);
+                    for (int i = 0; i < (tamano / 2); i++){
+                        printf("[%d]", i);
+                        memcpy(payload, server_reply + 16 + 16 * i, 8);
+                        carta = binary_to_decimal(payload, 8);
+                        cartas[i] = carta;
+                        if (carta == 1){
+                            printf("A");
+                        }
+                        else if (carta == 11){
+                            printf("J");
+                        }                        
+                        else if (carta == 12){
+                            printf("Q");
+                        }                        
+                        else if (carta == 13){
+                            printf("K");
+                        }
+                        else{
+                            printf("%d", carta);
+                        }
+                        memcpy(payload, server_reply + 16 + 8 + 16 * i, 8);
+                        pinta = binary_to_decimal(payload, 8);
+                        pintas[i] = pinta;
+                        // if (pinta == 1){
+                        //     pinta_unicode = 'U+2665';
+                        // }
+                        // if (pinta == 2){
+                        //     pinta_unicode = 'U+2666';
+                        // }                        
+                        // if (pinta == 3){
+                        //     pinta_unicode = 'U+2663';
+                        // }                        
+                        // if (pinta == 4){
+                        //     pinta_unicode = 'U+2660';
+                        // }
+                        // printf("%c  ", pinta_unicode);
+                        printf("%d  ", pinta);
+
+                    }
+                    printf("\n");
+                    break;
+
                 case 20:
                     memcpy(payload, server_reply + 16, 8);
                     if (binary_to_decimal(payload, 8) == 1){
@@ -294,6 +454,15 @@ int main(int argc , char *argv[])
                     else if(binary_to_decimal(payload, 8) == 2){
                         printf("Perdiste :( \n");
                     }
+
+                case 21:
+                    memcpy(payload_size, server_reply + 8, 8);
+                    tamano = binary_to_decimal(payload, 8);
+
+                    memcpy(payload, server_reply + 16, tamano * 8);
+                    pot = binary_to_decimal(payload, 8 * tamano);
+                    printf("Tu pot actual es: %d\n", pot);
+                    break;
 
                 case 22:
                     printf("El juego termino\n");

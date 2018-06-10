@@ -18,12 +18,16 @@ char nombre_j1[2000];
 char nombre_j2[2000];
 int pot_j1;
 int pot_j2;
+int bet_j1;
+int bet_j2;
 
 int carta_superior;               //cual es el indice de la prox carta a sacar
 
 Carta ** mazo;
 Carta ** mano_j1;
 Carta ** mano_j2;
+int comienza;
+int jugador_actual;
 // nombre_j1 = ;
 // nombre_j2 = ;
 
@@ -42,9 +46,13 @@ int main(int argc , char *argv[]){
     pot_j1 = 1000;
     pot_j2 = 1000;
     carta_superior = 0;
-    //TODO
-    // pot_j1 = 1;
-    // pot_j2 = 1000;
+    bet_j1 = 10;
+    bet_j2 = 10;
+    comienza = 0;
+    jugador_actual = 0;
+    //TODO BORRAR
+    // pot_j1 = 200;
+    // pot_j2 = 200;
 
     mazo = inicializar_mazo();
     mano_j1 = inicializar_mano();
@@ -185,8 +193,7 @@ void *connection_handler(void *socket_desc)
         char payload[2000];
 
         int tamano;
-        int comienza;
-        int jugador_actual;
+        int num;
 
         int carta = 0;
         int pinta = 0;
@@ -204,6 +211,7 @@ void *connection_handler(void *socket_desc)
                 memcpy(message, "00000010", 8);
                 memcpy(message + 8, "00000000", 8);
                 memcpy(message + 16, "00000000", 8);
+                sleep(1);
                 if(send(sock , message , 3 * 8 , 0) < 0){
                     puts("Send failed");
                 }
@@ -216,6 +224,7 @@ void *connection_handler(void *socket_desc)
                 memcpy(message, "00000011", 8);
                 memcpy(message + 8, "00000000", 8);
                 memcpy(message + 16, "00000000", 8);
+                sleep(1);
                 if(send(sock , message , 3 * 8 , 0) < 0){
                     puts("Send failed");
                 }
@@ -252,7 +261,7 @@ void *connection_handler(void *socket_desc)
                     memcpy(message, "00000101", 8);
                     memcpy(message + 8, payload_size, 8);
                     memcpy(message + 16, nombre_j1, n);
-
+                    sleep(1);
                     if(send(clientes[1] , message , 2 *8 + n , 0) < 0){
                         puts("Send failed");
                         break;
@@ -265,6 +274,7 @@ void *connection_handler(void *socket_desc)
                     memcpy(message, "00000101", 8);
                     memcpy(message + 8, payload_size, 8);
                     memcpy(message + 16, nombre_j2, n);
+                    sleep(1);
                     if(send(clientes[0] , message , 2 * 8 + n , 0) < 0){
                         puts("Send failed");
                         break;
@@ -282,7 +292,7 @@ void *connection_handler(void *socket_desc)
                     // message[4] = '\0';
 
  
-
+                    sleep(1);
                     if(send(clientes[0] , message , 4 * 8 , 0) < 0){
                         puts("Send failed");
                         break;
@@ -297,12 +307,12 @@ void *connection_handler(void *socket_desc)
                     memcpy(message + 8, "00000000", 8);
                     memcpy(message + 16, "00000000", 8);
                     memcpy(message + 24, "00000000", 8);                
-                    sleep(2);
+                    sleep(1);
                     if(send(clientes[0] , message , 3 * 8 , 0) < 0){
                         puts("Send failed");
                         break;
                     } 
-                    sleep(2);
+                    // sleep(2);
                     if(send(clientes[1] , message , 3 * 8 , 0) < 0){
                         puts("Send failed");
                         break;
@@ -314,6 +324,7 @@ void *connection_handler(void *socket_desc)
                         memcpy(message, "00010110", 8);
                         memcpy(message + 8, "00000000", 8);
                         memcpy(message + 16, "00000000", 8); 
+                        sleep(1);
                         if(send(clientes[0] , message , 3 * 8 , 0) < 0){
                             puts("Send failed");
                             break;
@@ -366,6 +377,7 @@ void *connection_handler(void *socket_desc)
 
                         int_to_bits(payload_size, pot_j1, tamano);
                         memcpy(message + 16, payload_size, tamano);
+                        sleep(1);
                         if(send(clientes[0] , message , 16 + tamano * 8 , 0) < 0){
                             puts("Send failed");
                             break;
@@ -377,6 +389,7 @@ void *connection_handler(void *socket_desc)
 
                         int_to_bits(payload_size, pot_j2, tamano);
                         memcpy(message + 16, payload_size, tamano);
+                        // sleep(1);
                         if(send(clientes[1] , message , 16 + tamano * 8 , 0) < 0){
                             puts("Send failed");
                             break;
@@ -399,6 +412,7 @@ void *connection_handler(void *socket_desc)
                         memcpy(message, "00001001", 8);
                         memcpy(message + 8, "00000001", 8);
                         memcpy(message + 16, "00001010", 8);  
+                        sleep(1);
                         if(send(clientes[0] , message , 3 * 8 , 0) < 0){
                             puts("Send failed");
                             break;
@@ -437,6 +451,7 @@ void *connection_handler(void *socket_desc)
 
                         //WHOS FIRST
                         comienza = quien_empieza();
+                        jugador_actual = comienza;
                         memcpy(message, "00001011", 8);
                         memcpy(message + 8, "00000001", 8);
 
@@ -457,7 +472,8 @@ void *connection_handler(void *socket_desc)
                             //GET CARDS TO CHANGE
                             memcpy(message, "00001100", 8);
                             memcpy(message + 8, "00000000", 8);
-                            memcpy(message + 16, "00000000", 8);   
+                            memcpy(message + 16, "00000000", 8);  
+                            sleep(1); 
                             if(send(clientes[0] , message , 8*3 , 0) < 0){
                                 puts("Send failed");
                                 break;
@@ -480,7 +496,8 @@ void *connection_handler(void *socket_desc)
                             //GET CARDS TO CHANGE
                             memcpy(message, "00001100", 8);
                             memcpy(message + 8, "00000000", 8);
-                            memcpy(message + 16, "00000000", 8);   
+                            memcpy(message + 16, "00000000", 8);
+                            sleep(1);   
                             if(send(clientes[1] , message , 8*3 , 0) < 0){
                                 puts("Send failed");
                                 break;
@@ -497,7 +514,8 @@ void *connection_handler(void *socket_desc)
             case 13:
                 memcpy(payload_size, client_message + 8, 8); 
                 tamano = binary_to_decimal(payload_size, 8);
-                // printf("tamano OLLA: %d\n", tamano);
+                printf("tamano OLLA: %d\n", tamano);
+                // printf("jug actual: %d\n", jugador_actual);
                 for (int i = 0; i < (tamano / 2); i++){
                     memcpy(payload, client_message + 16 + 16 * i, 8);
                     carta = binary_to_decimal(payload, 8);
@@ -541,6 +559,8 @@ void *connection_handler(void *socket_desc)
                 }
 
                 //VER a quien le toca
+                printf("comienza : %d\n", comienza );
+                printf("jugador_actual : %d\n", jugador_actual );
                 if (comienza == jugador_actual){            //le toca hace lo mismo al otro
                     if (jugador_actual == 1){
                         jugador_actual = 0;
@@ -551,7 +571,8 @@ void *connection_handler(void *socket_desc)
                     //GET CARDS TO CHANGE
                     memcpy(message, "00001100", 8);
                     memcpy(message + 8, "00000000", 8);
-                    memcpy(message + 16, "00000000", 8);   
+                    memcpy(message + 16, "00000000", 8); 
+                    sleep(1);  
                     if(send(clientes[jugador_actual] , message , 8*3 , 0) < 0){
                         puts("Send failed");
                         break;
@@ -559,6 +580,352 @@ void *connection_handler(void *socket_desc)
                 }
                 else{
                     jugador_actual = comienza;
+                    //GET BET
+                    memcpy(message, "00001110", 8);
+                    memcpy(message + 8, "00000100", 8);
+                    //se envian los IDS de bets NO vallores
+                    // memcpy(message + 16, "00000001", 8);         //NO mando fold
+                    memcpy(message + 16, "00000010", 8);   
+                    memcpy(message + 24, "00000011", 8);   
+                    memcpy(message + 32, "00000100", 8);   
+                    memcpy(message + 40, "00000101", 8);
+                    sleep(1);
+                    if(send(clientes[jugador_actual] , message , 8*6 , 0) < 0){
+                        puts("Send failed");
+                        break;
+                    } 
+                }
+                break;
+
+            case 15:
+                memcpy(payload, client_message + 8, 8);
+                tamano = binary_to_decimal(payload, 8);
+                memcpy(payload, client_message + 16, tamano * 8);
+                if (jugador_actual == 0){
+                    bet_j1 = binary_to_decimal(payload, tamano * 8);
+                    bet_j1 = obtener_bet(bet_j1);
+                    //TODO if bet_j1 == -1 FOLD
+                    if (pot_j1 >= bet_j1){
+                        //OK BET
+                        memcpy(message, "00010001", 8);
+                        memcpy(message + 8, "00000000", 8); 
+                        memcpy(message + 16, "00000000", 8);
+                        sleep(1);  
+                        if(send(clientes[jugador_actual] , message , 8*3 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        } 
+                        if (comienza == 0){
+                            jugador_actual = 1;
+                            tamano = 2;
+                            if (bet_j1 == 200){
+                                tamano += 1;
+                            }
+                            if (bet_j1 == 100){
+                                tamano += 2;
+                            }
+                            if (bet_j1 == 0){
+                                tamano += 3;
+                            }
+                            //se envian los IDS de bets NO vallores
+                            //GET BET para el 2
+                            int_to_bits(payload_size, tamano, 8);
+                            memcpy(message, "00001110", 8);
+                            memcpy(message + 8, payload_size, 8);
+                            memcpy(message + 16, "00000001", 8);        //FOLD
+                            num = obtener_id_bet(bet_j1);  
+                            int_to_bits(payload, num, 8);
+                            memcpy(message + 24, payload, 8);        //El bet_j1
+
+                            for (int i = 0; i < tamano - 2; i ++){
+                                num ++;
+                                int_to_bits(payload, num, 8);
+                                memcpy(message + 32 + i*8, payload, 8);        //El bet_j1
+                            }
+                            sleep(1);
+                            if(send(clientes[jugador_actual] , message , 4*8 + 8 * (tamano - 2) , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            } 
+                        }
+                        else{
+                            if (bet_j1 == -1 || bet_j1 <= bet_j2){
+                                //GO TO END
+                                //END ROUND
+                                memcpy(message, "00010010", 8);
+                                memcpy(message + 8, "00000000", 8); 
+                                memcpy(message + 16, "00000000", 8); 
+                                if(send(clientes[0] , message , 8*3 , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+                                if(send(clientes[1] , message , 8*3 , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+                                //SHOW OPPONENT CARDS
+                                memcpy(message, "00010011", 8);
+                                memcpy(message + 8, "00001010", 8);
+                                for (int i = 0; i < 5; i ++){
+                                    int_to_bits(payload_size, mano_j1[i][0].numero, 8);
+                                    memcpy(message + 16 + 16 * i, payload_size , 8);       //numero carta
+                                    int_to_bits(payload_size, mano_j1[i][0].pinta, 8);
+                                    memcpy(message + 24 + 16 * i, payload_size, 8);       //pinta carta                                        
+                                }
+                                sleep(1);
+                                if(send(clientes[1] , message , 2 * 8 + 5 * 16 , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                }  
+
+                                for (int i = 0; i < 5; i ++){
+                                    int_to_bits(payload_size, mano_j2[i][0].numero, 8);
+                                    memcpy(message + 16 + 16 * i, payload_size , 8);       //numero carta
+                                    int_to_bits(payload_size, mano_j2[i][0].pinta, 8);
+                                    memcpy(message + 24 + 16 * i, payload_size, 8);       //pinta carta                                        
+                                }
+                                sleep(1);
+                                if(send(clientes[0] , message , 2 * 8 + 5 * 16 , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                }  
+                       //RETURN WINNER LOSE
+                                memcpy(message, "00010100", 8);
+                                memcpy(message + 8, "00000001", 8);
+                                //mensaje ganador
+                                memcpy(message + 16, "00000001", 8); 
+                                if (quien_gano(mano_j1, mano_j2) == 2){       //el 1 perdio
+                                    sleep(1);
+                                    if(send(clientes[1] , message , 3 * 8 , 0) < 0){        //el 2 gano
+                                        puts("Send failed");
+                                        break;
+                                    }
+                                    sleep(1);
+                                    memcpy(message + 16, "00000010", 8);        //el 1 perdio
+                                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){
+                                        puts("Send failed");
+                                        break;
+                                    } 
+                                    pot_j1 -= bet_j1;
+                                    pot_j2 += bet_j2;  
+                                    // pot_j1 = actualizar_pot(pot_j1, bet_j1); 
+                                    // pot_j2 = actualizar_pot(pot_j2, bet_j2);                                                
+                                }
+                                else{
+                                    sleep(1);
+                                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){        //el 2 gano
+                                        puts("Send failed");
+                                        break;
+                                    }
+                                    memcpy(message + 16, "00000010", 8);        //el 1 perdio
+                                    sleep(1);
+                                    if(send(clientes[1] , message , 3 * 8 , 0) < 0){
+                                        puts("Send failed");
+                                        break;
+                                    }     
+                                    pot_j2 -= bet_j2;
+                                    pot_j1 += bet_j1; 
+                                }
+                                //UPDATE POT
+                                memcpy(message, "00010101", 8);
+                                tamano = obtener_tamano_bytes(pot_j1);
+                                int_to_bits(payload_size, tamano, 8);
+                                memcpy(message + 8, payload_size, 8);
+                                int_to_bits(payload, pot_j1, 8 * tamano);
+                                memcpy(message + 16, payload, 8 * tamano);   
+                                sleep(1);
+                                if(send(clientes[0] , message , 2 * 8 + 8 * tamano , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+
+                                tamano = obtener_tamano_bytes(pot_j2);
+                                int_to_bits(payload_size, tamano, 8);
+                                memcpy(message + 8, payload_size, 8);
+                                int_to_bits(payload, pot_j2, 8 * tamano);
+                                memcpy(message + 16, payload, 8 * tamano);   
+                                sleep(1);
+                                if(send(clientes[1] , message , 2 * 8 + 8 * tamano , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                }      
+                            }
+                        }
+                    }
+                    else{
+                        //ERROR BET
+                        memcpy(message, "00010000", 8);
+                        memcpy(message + 8, "00000000", 8); 
+                        memcpy(message + 16, "00000000", 8);  
+                        sleep(1);
+                        if(send(clientes[jugador_actual] , message , 8*3 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        }                       
+                    }
+                }
+                else{
+                    bet_j2 = binary_to_decimal(payload, tamano * 8);
+                    bet_j2 = obtener_bet(bet_j2);
+                    //TODO if bet_j1 == -1 FOLD
+                    if (pot_j2 >= bet_j2){
+                        //OK BET
+                        memcpy(message, "00010001", 8);
+                        memcpy(message + 8, "00000000", 8); 
+                        memcpy(message + 16, "00000000", 8);  
+                        sleep(1);
+                        if(send(clientes[jugador_actual] , message , 8*3 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        } 
+                        if (comienza == 1){
+                            jugador_actual = 0;
+                            //GET BET para el 2
+                            tamano = 2;
+                            if (bet_j2 == 200){
+                                tamano += 1;
+                            }
+                            if (bet_j2 == 100){
+                                tamano += 2;
+                            }
+                            if (bet_j2 == 0){
+                                tamano += 3;
+                            }
+                            //se envian los IDS de bets NO vallores
+                            int_to_bits(payload_size, tamano, 8);
+                            memcpy(message, "00001110", 8);
+                            memcpy(message + 8, payload_size, 8);
+                            memcpy(message + 24, "00000001", 8);        //FOLD
+                            num = obtener_id_bet(bet_j2);  
+                            int_to_bits(payload, num, 8);
+                            memcpy(message + 32, payload, 8);        //El bet_j2
+
+                            for (int i = 0; i < tamano - 2; i ++){
+                                num ++;
+                                int_to_bits(payload, num, 8);
+                                memcpy(message + 40 + i*8, payload, 8);        //El bet_j2
+                            }
+                            sleep(1);
+                            if(send(clientes[jugador_actual] , message , 4*8 + 8 * (tamano - 2)  , 0) < 0){
+                                puts("Send failed");
+                                break;
+                            } 
+                        }
+                        else{
+                            if (bet_j2 == -1 || bet_j2 <= bet_j1){
+                                //GO TO END
+                                //END ROUND
+                                memcpy(message, "00010010", 8);
+                                memcpy(message + 8, "00000000", 8); 
+                                memcpy(message + 16, "00000000", 8); 
+                                if(send(clientes[0] , message , 8*3 , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+                                if(send(clientes[1] , message , 8*3 , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+                                //SHOW OPPONENT CARDS
+                                memcpy(message, "00010011", 8);
+                                memcpy(message + 8, "00001010", 8);
+                                for (int i = 0; i < 5; i ++){
+                                    int_to_bits(payload_size, mano_j1[i][0].numero, 8);
+                                    memcpy(message + 16 + 16 * i, payload_size , 8);       //numero carta
+                                    int_to_bits(payload_size, mano_j1[i][0].pinta, 8);
+                                    memcpy(message + 24 + 16 * i, payload_size, 8);       //pinta carta                                        
+                                }
+                                sleep(1);
+                                if(send(clientes[1] , message , 2 * 8 + 5 * 16 , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                }  
+
+                                for (int i = 0; i < 5; i ++){
+                                    int_to_bits(payload_size, mano_j2[i][0].numero, 8);
+                                    memcpy(message + 16 + 16 * i, payload_size , 8);       //numero carta
+                                    int_to_bits(payload_size, mano_j2[i][0].pinta, 8);
+                                    memcpy(message + 24 + 16 * i, payload_size, 8);       //pinta carta                                        
+                                }
+                                sleep(1);
+                                if(send(clientes[0] , message , 2 * 8 + 5 * 16 , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+                                //RETURN WINNER LOSE
+                                memcpy(message, "00010100", 8);
+                                memcpy(message + 8, "00000001", 8);
+                                //mensaje ganador
+                                memcpy(message + 16, "00000001", 8); 
+                                if (quien_gano(mano_j1, mano_j2) == 2){       //el 1 perdio
+                                    sleep(1);
+                                    if(send(clientes[1] , message , 3 * 8 , 0) < 0){        //el 2 gano
+                                        puts("Send failed");
+                                        break;
+                                    }
+                                    sleep(1);
+                                    memcpy(message + 16, "00000010", 8);        //el 1 perdio
+                                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){
+                                        puts("Send failed");
+                                        break;
+                                    } 
+                                    pot_j1 -= bet_j1;
+                                    pot_j2 += bet_j2;  
+                                    // pot_j1 = actualizar_pot(pot_j1, bet_j1); 
+                                    // pot_j2 = actualizar_pot(pot_j2, bet_j2);                                                
+                                }
+                                else{
+                                    sleep(1);
+                                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){        //el 2 gano
+                                        puts("Send failed");
+                                        break;
+                                    }
+                                    memcpy(message + 16, "00000010", 8);        //el 1 perdio
+                                    sleep(1);
+                                    if(send(clientes[1] , message , 3 * 8 , 0) < 0){
+                                        puts("Send failed");
+                                        break;
+                                    }     
+                                    pot_j2 -= bet_j2;
+                                    pot_j1 += bet_j1; 
+                                }
+                                //UPDATE POT
+                                memcpy(message, "00010101", 8);
+                                tamano = obtener_tamano_bytes(pot_j1);
+                                int_to_bits(payload_size, tamano, 8);
+                                memcpy(message + 8, payload_size, 8);
+                                int_to_bits(payload, pot_j1, 8 * tamano);
+                                memcpy(message + 16, payload, 8 * tamano);   
+                                sleep(1);
+                                if(send(clientes[0] , message , 2 * 8 + 8 * tamano , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+
+                                tamano = obtener_tamano_bytes(pot_j2);
+                                int_to_bits(payload_size, tamano, 8);
+                                memcpy(message + 8, payload_size, 8);
+                                int_to_bits(payload, pot_j2, 8 * tamano);
+                                memcpy(message + 16, payload, 8 * tamano);   
+                                sleep(1);
+                                if(send(clientes[1] , message , 2 * 8 + 8 * tamano , 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                }                                  
+                            }
+                        }
+                    }
+                    else{
+                        //ERROR BET
+                        memcpy(message, "00010000", 8);
+                        memcpy(message + 8, "00000000", 8); 
+                        memcpy(message + 16, "00000000", 8);  
+                        sleep(1);
+                        if(send(clientes[jugador_actual] , message , 8*3 , 0) < 0){
+                            puts("Send failed");
+                            break;
+                        }                       
+                    }
                 }
                 break;
 
