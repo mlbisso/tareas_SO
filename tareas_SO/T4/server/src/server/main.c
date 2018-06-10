@@ -28,6 +28,7 @@ Carta ** mano_j1;
 Carta ** mano_j2;
 int comienza;
 int jugador_actual;
+int verf;
 // nombre_j1 = ;
 // nombre_j2 = ;
 
@@ -43,6 +44,7 @@ int main(int argc , char *argv[]){
         return 1;
     }
 
+    verf = 0;
     pot_j1 = 1000;
     pot_j2 = 1000;
     carta_superior = 0;
@@ -375,8 +377,8 @@ void *connection_handler(void *socket_desc)
                         int_to_bits(payload_size, tamano, 8);       //quiero guardar en payload siz el tamano en 1B
                         memcpy(message + 8, payload_size, 8);
 
-                        int_to_bits(payload_size, pot_j1, tamano);
-                        memcpy(message + 16, payload_size, tamano);
+                        int_to_bits(payload_size, pot_j1, tamano * 8);
+                        memcpy(message + 16, payload_size, tamano * 8);
                         sleep(1);
                         if(send(clientes[0] , message , 16 + tamano * 8 , 0) < 0){
                             puts("Send failed");
@@ -387,8 +389,8 @@ void *connection_handler(void *socket_desc)
                         int_to_bits(payload_size, tamano, 8);       //quiero guardar en payload siz el tamano en 1B
                         memcpy(message + 8, payload_size, 8);
 
-                        int_to_bits(payload_size, pot_j2, tamano);
-                        memcpy(message + 16, payload_size, tamano);
+                        int_to_bits(payload_size, pot_j2, tamano * 8);
+                        memcpy(message + 16, payload_size, tamano * 8);
                         // sleep(1);
                         if(send(clientes[1] , message , 16 + tamano * 8 , 0) < 0){
                             puts("Send failed");
@@ -615,7 +617,7 @@ void *connection_handler(void *socket_desc)
                             puts("Send failed");
                             break;
                         } 
-                        if (comienza == 0){
+                        if (comienza == 0 && verf != 1){
                             jugador_actual = 1;
                             tamano = 2;
                             if (bet_j1 == 200){
@@ -649,9 +651,10 @@ void *connection_handler(void *socket_desc)
                             } 
                         }
                         else{
-                            if (bet_j1 == -1 || bet_j1 <= bet_j2){
+                            if (bet_j1 == -1 || bet_j1 <= bet_j2 || verf == 1){
                                 //GO TO END
                                 //END ROUND
+                                verf = 0;
                                 memcpy(message, "00010010", 8);
                                 memcpy(message + 8, "00000000", 8); 
                                 memcpy(message + 16, "00000000", 8); 
@@ -694,6 +697,20 @@ void *connection_handler(void *socket_desc)
                                 memcpy(message + 8, "00000001", 8);
                                 //mensaje ganador
                                 memcpy(message + 16, "00000001", 8); 
+                                if (bet_j1 == -1){          //HIZO FOLD PERDIO
+                                    sleep(1);
+                                    if(send(clientes[1] , message , 3 * 8 , 0) < 0){        //el 2 gano
+                                        puts("Send failed");
+                                        break;
+                                    }
+                                    sleep(1);
+                                    memcpy(message + 16, "00000010", 8);        //el 1 perdio
+                                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){
+                                        puts("Send failed");
+                                        break;
+                                    }  
+                                    // pot_j2 += bet_j2;
+                                } 
                                 if (quien_gano(mano_j1, mano_j2) == 2){       //el 1 perdio
                                     sleep(1);
                                     if(send(clientes[1] , message , 3 * 8 , 0) < 0){        //el 2 gano
@@ -727,28 +744,60 @@ void *connection_handler(void *socket_desc)
                                     pot_j1 += bet_j1; 
                                 }
                                 //UPDATE POT
+                                printf("pot_j1: %d\n", pot_j1);
+                                printf("pot_j2: %d\n", pot_j2);
                                 memcpy(message, "00010101", 8);
                                 tamano = obtener_tamano_bytes(pot_j1);
+                                printf("tamano: %d\n", tamano);
                                 int_to_bits(payload_size, tamano, 8);
                                 memcpy(message + 8, payload_size, 8);
                                 int_to_bits(payload, pot_j1, 8 * tamano);
                                 memcpy(message + 16, payload, 8 * tamano);   
+                                printf("Mess1: %s", message);
+                                printf("III\n");
                                 sleep(1);
+                                
                                 if(send(clientes[0] , message , 2 * 8 + 8 * tamano , 0) < 0){
                                     puts("Send failed");
                                     break;
                                 } 
 
                                 tamano = obtener_tamano_bytes(pot_j2);
+                                                                printf("tamano: %d\n", tamano);
+
                                 int_to_bits(payload_size, tamano, 8);
                                 memcpy(message + 8, payload_size, 8);
-                                int_to_bits(payload, pot_j2, 8 * tamano);
-                                memcpy(message + 16, payload, 8 * tamano);   
+                                int_to_bits(payload, pot_j2, tamano * 8);
+                                memcpy(message + 16, payload, tamano * 8); 
+                                printf("Mess2: %s", message);  
+                                printf("III\n");
                                 sleep(1);
-                                if(send(clientes[1] , message , 2 * 8 + 8 * tamano , 0) < 0){
+                                
+                                if(send(clientes[1] , message , 2 * 8 + tamano * 8 , 0) < 0){
                                     puts("Send failed");
                                     break;
                                 }      
+                            }
+                            else{
+                                //MANDARLE AL 2 MAURO
+                                tamano = 2;
+                                //GET BET
+                                //se envian los IDS de bets NO vallores
+                                int_to_bits(payload_size, tamano, 8);
+                                memcpy(message, "00001110", 8);
+                                memcpy(message + 8, payload_size, 8);
+                                memcpy(message + 16, "00000001", 8);        //FOLD
+                                num = obtener_id_bet(bet_j1);  
+                                int_to_bits(payload, num, 8);
+                                memcpy(message + 24, payload, 8);        //El bet_j2
+
+                                sleep(1);
+                                if(send(clientes[1] , message , 4*8, 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+                                jugador_actual = 1;
+                                verf = 1;
                             }
                         }
                     }
@@ -778,7 +827,7 @@ void *connection_handler(void *socket_desc)
                             puts("Send failed");
                             break;
                         } 
-                        if (comienza == 1){
+                        if (comienza == 1 && verf != 1){
                             jugador_actual = 0;
                             //GET BET para el 2
                             tamano = 2;
@@ -795,10 +844,10 @@ void *connection_handler(void *socket_desc)
                             int_to_bits(payload_size, tamano, 8);
                             memcpy(message, "00001110", 8);
                             memcpy(message + 8, payload_size, 8);
-                            memcpy(message + 24, "00000001", 8);        //FOLD
+                            memcpy(message + 16, "00000001", 8);        //FOLD
                             num = obtener_id_bet(bet_j2);  
                             int_to_bits(payload, num, 8);
-                            memcpy(message + 32, payload, 8);        //El bet_j2
+                            memcpy(message + 24, payload, 8);        //El bet_j2
 
                             for (int i = 0; i < tamano - 2; i ++){
                                 num ++;
@@ -812,12 +861,14 @@ void *connection_handler(void *socket_desc)
                             } 
                         }
                         else{
-                            if (bet_j2 == -1 || bet_j2 <= bet_j1){
+                            if (bet_j2 == -1 || bet_j2 <= bet_j1 || verf == 1){
                                 //GO TO END
                                 //END ROUND
+                                verf = 0;
                                 memcpy(message, "00010010", 8);
                                 memcpy(message + 8, "00000000", 8); 
                                 memcpy(message + 16, "00000000", 8); 
+                                sleep(1);
                                 if(send(clientes[0] , message , 8*3 , 0) < 0){
                                     puts("Send failed");
                                     break;
@@ -856,8 +907,22 @@ void *connection_handler(void *socket_desc)
                                 memcpy(message, "00010100", 8);
                                 memcpy(message + 8, "00000001", 8);
                                 //mensaje ganador
-                                memcpy(message + 16, "00000001", 8); 
-                                if (quien_gano(mano_j1, mano_j2) == 2){       //el 1 perdio
+                                memcpy(message + 16, "00000001", 8);
+                                if (bet_j2 == -1){          //HIZO FOLD PERDIO
+                                    sleep(1);
+                                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){        //el 1 gano
+                                        puts("Send failed");
+                                        break;
+                                    }
+                                    memcpy(message + 16, "00000010", 8);        //el 2 perdio
+                                    sleep(1);
+                                    if(send(clientes[1] , message , 3 * 8 , 0) < 0){
+                                        puts("Send failed");
+                                        break;
+                                    }  
+                                    // pot_j1 += bet_j1;
+                                } 
+                                else if (quien_gano(mano_j1, mano_j2) == 2){       //el 1 perdio
                                     sleep(1);
                                     if(send(clientes[1] , message , 3 * 8 , 0) < 0){        //el 2 gano
                                         puts("Send failed");
@@ -876,11 +941,11 @@ void *connection_handler(void *socket_desc)
                                 }
                                 else{
                                     sleep(1);
-                                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){        //el 2 gano
+                                    if(send(clientes[0] , message , 3 * 8 , 0) < 0){        //el 1 gano
                                         puts("Send failed");
                                         break;
                                     }
-                                    memcpy(message + 16, "00000010", 8);        //el 1 perdio
+                                    memcpy(message + 16, "00000010", 8);        //el 2 perdio
                                     sleep(1);
                                     if(send(clientes[1] , message , 3 * 8 , 0) < 0){
                                         puts("Send failed");
@@ -890,28 +955,62 @@ void *connection_handler(void *socket_desc)
                                     pot_j1 += bet_j1; 
                                 }
                                 //UPDATE POT
+                                printf("pot_j1: %d\n", pot_j1);
+                                printf("pot_j2: %d\n", pot_j2);
+
                                 memcpy(message, "00010101", 8);
                                 tamano = obtener_tamano_bytes(pot_j1);
+                                                                printf("tamano: %d\n", tamano);
+
                                 int_to_bits(payload_size, tamano, 8);
                                 memcpy(message + 8, payload_size, 8);
-                                int_to_bits(payload, pot_j1, 8 * tamano);
-                                memcpy(message + 16, payload, 8 * tamano);   
+                                int_to_bits(payload, pot_j1, tamano * 8);
+                                memcpy(message + 16, payload, tamano * 8);   
+                                printf("Mess1: %s", message);
+                                printf("III\n");
                                 sleep(1);
-                                if(send(clientes[0] , message , 2 * 8 + 8 * tamano , 0) < 0){
+                                
+                                if(send(clientes[0] , message , 2 * 8 + tamano * 8 , 0) < 0){
                                     puts("Send failed");
                                     break;
                                 } 
 
                                 tamano = obtener_tamano_bytes(pot_j2);
+                                                                printf("tamano: %d\n", tamano);
+
                                 int_to_bits(payload_size, tamano, 8);
                                 memcpy(message + 8, payload_size, 8);
-                                int_to_bits(payload, pot_j2, 8 * tamano);
-                                memcpy(message + 16, payload, 8 * tamano);   
+                                int_to_bits(payload, pot_j2, tamano * 8);
+                                memcpy(message + 16, payload, tamano * 8);  
+                                printf("Mess2: %s", message); 
+                                printf("III\n");
                                 sleep(1);
-                                if(send(clientes[1] , message , 2 * 8 + 8 * tamano , 0) < 0){
+
+                                if(send(clientes[1] , message , 2 * 8 + tamano * 8 , 0) < 0){
                                     puts("Send failed");
                                     break;
                                 }                                  
+                            }
+                            else{
+                                //MANDARLE AL 2 MAURO
+                                tamano = 2;
+                                //GET BET
+                                //se envian los IDS de bets NO vallores
+                                int_to_bits(payload_size, tamano, 8);
+                                memcpy(message, "00001110", 8);
+                                memcpy(message + 8, payload_size, 8);
+                                memcpy(message + 16, "00000001", 8);        //FOLD
+                                num = obtener_id_bet(bet_j2);  
+                                int_to_bits(payload, num, 8);
+                                memcpy(message + 24, payload, 8);        //El bet_j2
+
+                                sleep(1);
+                                if(send(clientes[0] , message , 4*8, 0) < 0){
+                                    puts("Send failed");
+                                    break;
+                                } 
+                                jugador_actual = 0;
+                                verf = 1;
                             }
                         }
                     }

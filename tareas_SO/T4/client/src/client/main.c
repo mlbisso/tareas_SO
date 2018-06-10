@@ -174,6 +174,7 @@ int main(int argc , char *argv[])
                     printf("Comienza una nueva ronda\n");
                     memcpy(large, server_reply + 8, 8); 
                     tamano = binary_to_decimal(large, 8);
+                    // printf("T: %d\n", tamano);
                     memcpy(payload, server_reply + 16, tamano * 8);
                     pot = binary_to_decimal(payload, tamano * 8);
                     printf("Tu pot actual es: %d\n", pot);
@@ -214,20 +215,19 @@ int main(int argc , char *argv[])
                         memcpy(payload, server_reply + 16 + 8 + 16 * i, 8);
                         pinta = binary_to_decimal(payload, 8);
                         pintas[i] = pinta;
-                        // if (pinta == 1){
-                        //     pinta_unicode = 'U+2665';
-                        // }
-                        // if (pinta == 2){
-                        //     pinta_unicode = 'U+2666';
-                        // }                        
-                        // if (pinta == 3){
-                        //     pinta_unicode = 'U+2663';
-                        // }                        
-                        // if (pinta == 4){
-                        //     pinta_unicode = 'U+2660';
-                        // }
-                        // printf("%c  ", pinta_unicode);
-                        printf("%d  ", pinta);
+                        if (pinta == 1){
+                            printf("\u2665  ");
+                        }
+                        if (pinta == 2){
+                            printf("\u2666  ");
+                        }                        
+                        if (pinta == 3){
+                            printf("\u2663  ");
+                        }                        
+                        if (pinta == 4){
+                            printf("\u2660  ");
+                        }
+                        // printf("%d  ", pinta);
 
                     }
                     printf("\n");
@@ -427,20 +427,19 @@ int main(int argc , char *argv[])
                         memcpy(payload, server_reply + 16 + 8 + 16 * i, 8);
                         pinta = binary_to_decimal(payload, 8);
                         pintas[i] = pinta;
-                        // if (pinta == 1){
-                        //     pinta_unicode = 'U+2665';
-                        // }
-                        // if (pinta == 2){
-                        //     pinta_unicode = 'U+2666';
-                        // }                        
-                        // if (pinta == 3){
-                        //     pinta_unicode = 'U+2663';
-                        // }                        
-                        // if (pinta == 4){
-                        //     pinta_unicode = 'U+2660';
-                        // }
-                        // printf("%c  ", pinta_unicode);
-                        printf("%d  ", pinta);
+                        if (pinta == 1){
+                            printf("\u2665  ");
+                        }
+                        if (pinta == 2){
+                            printf("\u2666  ");
+                        }                        
+                        if (pinta == 3){
+                            printf("\u2663  ");
+                        }                        
+                        if (pinta == 4){
+                            printf("\u2660  ");
+                        }
+                        // printf("%d  ", pinta);
 
                     }
                     printf("\n");
@@ -454,11 +453,11 @@ int main(int argc , char *argv[])
                     else if(binary_to_decimal(payload, 8) == 2){
                         printf("Perdiste :( \n");
                     }
+                    break;
 
                 case 21:
                     memcpy(payload_size, server_reply + 8, 8);
-                    tamano = binary_to_decimal(payload, 8);
-
+                    tamano = binary_to_decimal(payload_size, 8);
                     memcpy(payload, server_reply + 16, tamano * 8);
                     pot = binary_to_decimal(payload, 8 * tamano);
                     printf("Tu pot actual es: %d\n", pot);

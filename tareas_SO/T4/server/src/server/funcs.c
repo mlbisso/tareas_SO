@@ -192,7 +192,12 @@ int escala_color(Carta ** mano){
 }
 
 int puntos_escala_color(Carta ** mano){
-    int puntos = mano[4][0].numero;
+    int puntos = 0;
+    if (mano[0][0].numero == 1){
+        puntos += 14;
+    } else {
+        puntos += mano[4][0].numero;
+    }
     return puntos;
 }
 
@@ -340,7 +345,12 @@ int color(Carta ** mano){
 }
 
 int puntos_color(Carta ** mano){
-    int puntos = mano[4][0].numero;
+    int puntos = 0;
+    if (mano[0][0].numero == 1){
+        puntos += 14;
+    } else {
+        puntos += mano[4][0].numero;
+    }
     return puntos;
 }
 
@@ -393,7 +403,11 @@ int puntos_trio(Carta ** mano){
             }
         }
         if (cartas_iguales == 3){
-            return numero_a_comparar;
+            if (numero_a_comparar == 1){
+                return 14;
+            } else{
+                return numero_a_comparar;
+            }
         }
         cartas_iguales = 0;
     }
@@ -504,7 +518,11 @@ int puntos_par(Carta ** mano){
             }
         }
         if (cartas_iguales == 2){
-            return numero_a_comparar;
+            if (numero_a_comparar == 1){
+                return 14;
+            } else{
+                return numero_a_comparar;
+            }
         }
         cartas_iguales = 0;
     }
@@ -669,5 +687,5 @@ int obtener_tamano_bytes(int numero){
 	if (resto != 8){
 		i += resto;
 	}
-	return i;
+	return i / 8;
 }
